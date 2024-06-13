@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h2>{% block title %}Process Invoices{% endblock title %}</h2>
+
+{% endblock header %}
+
+{% block content %}
+  <p>This page is for processing invoices.</p>
+  <div id="controls">
+    <div>
+      <button class="button" type="button" id="reviewRunButton" onclick="reviewRun()">Review Run</button>
+      <button class="button" type="button" id="checkReviewStatusButton" onclick="checkReviewRunStatus()">Check Task Status</button>
+      <button class="buttom" type="button" id="displayReviewResultButton" onclick="displayReviewResult()">Display Result</button>
+      <p>Results from Review Run</p>
+      <output id="reviewRunOutput"><pre>{{ review_run_output }}</pre></output>
+    </div>
+    <div>
+      <button class="button" type="button" id="finalRunButton" onclick="finalRun()">Final Run</button>
+      <button class="button" type="button" id="checkReviewStatusButton" onclick="checkFinalRunStatus()">Check Task Status</button>
+      <p>Results from Final Run</p>
+      <output id="finalRunOutput"><pre>{{ final_run_output }}</pre></output>
+    </div>
+    <script>
+      function reviewRun() {
+        window.location.href="{{ url_for('views.process_invoices_review_run') }}"
+      }; 
+      function finalRun() {
+        window.location.href="{{ url_for('views.process_invoices_final_run') }}"
+      }
+      function checkReviewRunStatus() {
+        window.location.href="{{ url_for('views.check_status_review_run') }}"
+      };
+      function checkFinalRunStatus() {
+        window.location.href="{{ url_for('views.check_status_final_run') }}"
+      }
+      function displayReviewResult() {
+        window.location.href="{{ url_for('views.display_review_result') }}"
+      }
+    </script>
+  </div>
+
+{% endblock content %}
