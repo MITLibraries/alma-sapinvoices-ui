@@ -78,7 +78,7 @@ docker run -p 9000:8080 my_function:latest lambdas.<a-different-module>.lambda_h
    ```
    cd lambdas/flask-app
    ```
-3. Run the Flask app using the following command: 
+4. Run the Flask app using the following command: 
    ```
    pipenv run python -m flask --app sapinvoices run --port 8000  --debug
    ```
