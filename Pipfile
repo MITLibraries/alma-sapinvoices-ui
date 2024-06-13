@@ -4,6 +4,9 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
+apig-wsgi = "*"
+boto3 = "*"
+Flask = "*"
 sentry-sdk = "*"
 
 [dev-packages]
