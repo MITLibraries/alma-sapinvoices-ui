@@ -68,11 +68,30 @@ If this repo contains multiple lambda functions, you can call any handler you co
 docker run -p 9000:8080 my_function:latest lambdas.<a-different-module>.lambda_handler
 ```
 
+## Running the Flask App Locally
+
+1. Create a .env file at the root folder of the project repository with all required environment variables configured. 
+
+2. Export AWS credentials for the appropriate environment. For local runs, use `Dev`. Set `AWS_DEFAULT_REGION="us-east-1"`.
+
+3. Navigate to the `lambda/flask-app` directory.
+   ```
+   cd lambdas/flask-app
+   ```
+3. Run the Flask app using the following command: 
+   ```
+   pipenv run python -m flask --app sapinvoices run --port 8000  --debug
+   ```
+   
 ## Environment Variables
 
 ### Required
 
 ```shell
+ALMA_SAPINVOICES_ECS_CLUSTER_ARN=### The full Amazon Resource Name (ARN) of the ECS cluster for Alma SAP Invoices.
+ALMA_SAPINVOICES_ECS_TASK_ARN=### The full ARN of the ECS task definition that launches the Alma SAP Invoices CLI.
+ALMA_SAPINVOICES_VPC_CONFIG=### A dictionary with network configurations required for running a task.
+SECRET_KEY=### A secret key used by Flask to securely sign the session cookie and manage other security related needs. It should be a long random bytes or string value.
 SENTRY_DSN=### If set to a valid Sentry DSN, enables Sentry exception monitoring. This is not needed for local development.
 WORKSPACE=### Set to `dev` for local development, this will be set to `stage` and `prod` in those environments by Terraform.
 ```
