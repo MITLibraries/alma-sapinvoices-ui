@@ -24,6 +24,9 @@ A Flask application run in AWS Lambda used to process invoices from Alma. Invoic
 ### Required
 
 ```shell
+ALMA_SAP_INVOICES_ECS_CLUSTER=### The short name or full ARN of the ECS cluster to run the Alma SAP Invoices CLI task.
+ALMA_SAP_INVOICES_ECS_TASK_DEFINITION=### The family and revision (formatted as <family>:<revision>) or full ARN of Alma SAP Invoices CLI task. 
+ALMA_SAP_INVOICES_ECS_NETWORK_CONFIG=### The network configuration for the ECS task.
 SENTRY_DSN=### If set to a valid Sentry DSN, enables Sentry exception monitoring. This is not needed for local development.
 WORKSPACE=### Set to `dev` for local development, this will be set to `stage` and `prod` in those environments by Terraform.
 ```

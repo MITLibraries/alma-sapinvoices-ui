@@ -19,3 +19,6 @@ ruff = "*"
 
 [requires]
 python_version = "3.12"
+
+[scripts]
+sapinvoices_flask_app = "python -c \"from webapp import create_app; create_app().run()\""
