@@ -1,3 +1,6 @@
+ECR_NAME_DEV:=alma-sapinvoices-ui-dev
+ECR_URL_DEV:=222053980223.dkr.ecr.us-east-1.amazonaws.com/alma-sapinvoices-ui-dev
+
 SHELL=/bin/bash
 DATETIME:=$(shell date -u +%Y%m%dT%H%M%SZ)
 
@@ -55,3 +58,26 @@ black-apply: # Apply changes with 'black'
 
 ruff-apply: # Resolve 'fixable errors' with 'ruff'
 	pipenv run ruff check --fix .
+
+######################################################################
+# Terraform-generated Developer Deploy Commands for Dev environment
+######################################################################
+dist-dev: # Build Docker image for Dev
+	docker build --platform linux/amd64 \
+		-t $(ECR_URL_DEV):latest \
+		-t $(ECR_URL_DEV):`git describe --always` \
+		-t $(ECR_NAME_DEV):latest .
+
+dist-publish: dist-dev # Build, tag, and push Docker image for Dev
+	docker login -u AWS -p $$(aws ecr get-login-password --region us-east-1) $(ECR_URL_DEV)
+	docker push $(ECR_URL_DEV):latest
+	docker push $(ECR_URL_DEV):`git describe --always`
+	
+######################################################################
+# Terraform-generated Developer Deploy Commands for Stage environment
+# This requires that ECR_NAME_STAGE, ECR_URL_STAGE, and FUNCTION_STAGE
+# environment variables are set locally by the developer and that the
+# developer has authenticated to the correct AWS Account. The values
+# for the environment variables can be found in the stage_build.yml 
+# caller workflow.   
+######################################################################
