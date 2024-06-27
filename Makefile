@@ -68,7 +68,7 @@ dist-dev: # Build Docker image for Dev
 		-t $(ECR_URL_DEV):`git describe --always` \
 		-t $(ECR_NAME_DEV):latest .
 
-dist-publish: dist-dev # Build, tag, and push Docker image for Dev
+publish-dev: dist-dev # Build, tag, and push Docker image for Dev
 	docker login -u AWS -p $$(aws ecr get-login-password --region us-east-1) $(ECR_URL_DEV)
 	docker push $(ECR_URL_DEV):latest
 	docker push $(ECR_URL_DEV):`git describe --always`
