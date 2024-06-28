@@ -5,13 +5,16 @@ name = "pypi"
 
 [packages]
 apig-wsgi = "*"
+attrs = "*"
 boto3 = "*"
 Flask = "*"
 sentry-sdk = "*"
 
 [dev-packages]
 black = "*"
+boto3-stubs = {version = "*", extras = ["ecs"]}
 coveralls = "*"
+moto = "*"
 mypy = "*"
 pre-commit = "*"
 pytest = "*"
