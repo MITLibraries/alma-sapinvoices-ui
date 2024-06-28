@@ -1,9 +1,20 @@
 import pytest
 
+from webapp import Config
+
 
 @pytest.fixture(autouse=True)
 def _test_env(monkeypatch):
+    monkeypatch.setenv("ALMA_SAP_INVOICES_ECS_CLUSTER", "test")
+    monkeypatch.setenv("ALMA_SAP_INVOICES_ECS_TASK_DEFINITION", "test")
+    monkeypatch.setenv("ALMA_SAP_INVOICES_ECS_NETWORK_CONFIG", "test")
     monkeypatch.setenv("WORKSPACE", "test")
+    monkeypatch.setenv("SENTRY_DSN", "https://1234567890@00000.ingest.sentry.io/123456")
+
+
+@pytest.fixture
+def config(_test_env):
+    return Config()
 
 
 @pytest.fixture
