@@ -23,4 +23,4 @@ def test_app_doesnt_configure_sentry_if_dsn_not_present(caplog, monkeypatch):
 def test_lambda_handler_success(lambda_function_event_payload):
     reload(lambdas)
     response = lambdas.lambda_handler(lambda_function_event_payload, {})
-    assert response["body"] == "Hello, World!"
+    assert response["body"] == "Hello, World! WORKSPACE=test"
