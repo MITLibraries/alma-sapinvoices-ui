@@ -137,3 +137,6 @@ dmypy.json
 
 # jetbrains
 .idea/
+
+# output
+output/

@@ -16,6 +16,7 @@ logger = logging.getLogger("__name__")
 
 class Config:
     REQUIRED_ENV_VARS = (
+        "ALMA_SAP_INVOICES_ECR_IMAGE_NAME",
         "ALMA_SAP_INVOICES_ECS_CLUSTER",
         "ALMA_SAP_INVOICES_ECS_TASK_DEFINITION",
         "ALMA_SAP_INVOICES_ECS_NETWORK_CONFIG",
@@ -30,6 +31,14 @@ class Config:
         message = f"'{name}' not a valid configuration variable"
         raise AttributeError(message)
 
+    def _getenv(self, name: str) -> Any:
+        if value := os.getenv(name):
+            return value
+        if name in self.REQUIRED_ENV_VARS:
+            message = f"'{name}' is a required environment variable."
+            raise AttributeError(message)
+        return None
+
     @property
     def ALMA_SAP_INVOICES_ECS_NETWORK_CONFIG(self) -> dict:
         network_config = os.getenv("ALMA_SAP_INVOICES_ECS_NETWORK_CONFIG")
@@ -39,20 +48,24 @@ class Config:
             raise InvalidNetworkConfigurationError(error) from error
 
     @property
-    def ALMA_SAP_INVOICES_ECS_CLUSTER(self) -> str | None:
-        return os.getenv("ALMA_SAP_INVOICES_ECS_CLUSTER")
+    def ALMA_SAP_INVOICES_ECR_IMAGE_NAME(self) -> str:
+        return self._getenv("ALMA_SAP_INVOICES_ECR_IMAGE_NAME")
 
     @property
-    def ALMA_SAP_INVOICES_ECS_TASK_DEFINITION(self) -> str | None:
-        return os.getenv("ALMA_SAP_INVOICES_ECS_TASK_DEFINITION")
+    def ALMA_SAP_INVOICES_ECS_CLUSTER(self) -> str:
+        return self._getenv("ALMA_SAP_INVOICES_ECS_CLUSTER")
 
     @property
-    def SENTRY_DSN(self) -> str | None:
-        return os.getenv("SENTRY_DSN")
+    def ALMA_SAP_INVOICES_ECS_TASK_DEFINITION(self) -> str:
+        return self._getenv("ALMA_SAP_INVOICES_ECS_TASK_DEFINITION")
 
     @property
-    def WORKSPACE(self) -> str | None:
-        return os.getenv("WORKSPACE")
+    def SENTRY_DSN(self) -> str:
+        return self._getenv("SENTRY_DSN")
+
+    @property
+    def WORKSPACE(self) -> str:
+        return self._getenv("WORKSPACE")
 
     def check_required_env_vars(self) -> None:
         """Method to raise exception if required env vars not set."""
