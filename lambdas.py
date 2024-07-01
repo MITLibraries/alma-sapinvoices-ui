@@ -3,9 +3,13 @@ import logging
 import os
 
 import sentry_sdk
+from apig_wsgi import make_lambda_handler
 from sentry_sdk.integrations.aws_lambda import AwsLambdaIntegration
 
+from webapp import create_app
+
 logger = logging.getLogger(__name__)
+
 logger.setLevel(logging.DEBUG)
 
 env = os.getenv("WORKSPACE")
@@ -23,11 +27,11 @@ else:
     logger.info("No Sentry DSN found, exceptions will not be sent to Sentry")
 
 
-def lambda_handler(event: dict) -> str:
-    if not os.getenv("WORKSPACE"):
-        unset_workspace_error_message = "Required env variable WORKSPACE is not set"
-        raise RuntimeError(unset_workspace_error_message)
+def lambda_handler(event: dict, context: dict) -> dict:
+    # this is the function that lambda should use
+    apig_wsgi_handler = make_lambda_handler(create_app())
 
     logger.debug(json.dumps(event))
+    logger.debug(context)
 
-    return "You have successfully called this lambda!"
+    return apig_wsgi_handler(event, context)

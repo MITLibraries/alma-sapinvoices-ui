@@ -4,6 +4,9 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
+apig-wsgi = "*"
+boto3 = "*"
+Flask = "*"
 sentry-sdk = "*"
 
 [dev-packages]
@@ -15,4 +18,7 @@ pytest = "*"
 ruff = "*"
 
 [requires]
-python_version = "3.11"
+python_version = "3.12"
+
+[scripts]
+sapinvoices_flask_app = "python -c \"from webapp import create_app; create_app().run()\""
