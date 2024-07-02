@@ -1,0 +1,75 @@
+message
+"INFO sapinvoices.cli.process_invoices(): Logger 'root' configured with level=INFO"
+"INFO sapinvoices.cli.process_invoices(): Sentry DSN found, exceptions will be sent to Sentry with env=prod"
+"INFO sapinvoices.cli.process_invoices(): alma-sapinvoices config settings loaded for environment: prod"
+"INFO sapinvoices.cli.process_invoices(): Starting SAP invoices process with options: "
+"INFO sapinvoices.cli.process_invoices(): Date: 2024-07-02 17:56:42.482482+00:00 "
+"INFO sapinvoices.cli.process_invoices(): Final run: True "
+"INFO sapinvoices.cli.process_invoices(): Real run: True"
+"INFO sapinvoices.cli.process_invoices(): 5 invoices retrieved from Alma"
+"INFO sapinvoices.sap.parse_invoice_records(): Extracting data for invoice record 18681064740006761, record 1 of 5"
+"INFO sapinvoices.sap.parse_invoice_records(): Extracting data for invoice record 18681056310006761, record 2 of 5"
+"INFO sapinvoices.sap.parse_invoice_records(): Extracting data for invoice record 18681094950006761, record 3 of 5"
+"INFO sapinvoices.sap.parse_invoice_records(): Extracting data for invoice record 18681085290006761, record 4 of 5"
+"INFO sapinvoices.sap.parse_invoice_records(): Extracting data for invoice record 18688496210006761, record 5 of 5"
+"INFO sapinvoices.cli.process_invoices(): 0 problem invoices found."
+"INFO sapinvoices.cli.process_invoices(): 3 monograph invoices retrieved and parsed."
+"INFO sapinvoices.cli.process_invoices(): 2 serial invoices retrieved and parsed."
+"INFO sapinvoices.ssm.__init__(): Initializing SSM client with endpoint: https://ssm.us-east-1.amazonaws.com"
+"INFO sapinvoices.sap.run(): Starting file generation process for run monograph"
+"INFO sapinvoices.sap.run(): Generated next SAP file names: dlibsapg.<sequence_number>.<date_string>, clibsapg.<sequence_number>.<date_string>"
+"INFO sapinvoices.sap.run(): Generating monographs summary"
+"INFO sapinvoices.sap.run(): Generating monographs report"
+"INFO sapinvoices.sap.run(): Final run, generating files for SAP"
+"INFO sapinvoices.sap.run(): Monographs data file contents:"
+"B<document_date><baseline_date><invoice_number><invoiced_date>X000400000          50.00         Comfy Office Chairs, Co.      BOSTON                             P.O. BOX 000001                                                        02284-5904MA US"                                                                                      
+D<funds_gl_account>    <funds_cost_object>               50.00 
+B<document_date><baseline_date><invoice_number><invoiced_date>X000400000          150.00        Only Pringles Vending Machine BOSTON                             P.O. BOX 000001                                                        02284-5904MA US                      
+D<funds_gl_account>    <funds_cost_object>               150.00 
+B2024070220240702101576240614    X000400000          300.00         Library Smells Perfume Co.            New York                            P.O. Box 000002                                                     10036-0001NY US                                                                                      
+C<funds_gl_account>    <funds_cost_object>               150.00 
+D<funds_gl_account>    <funds_cost_object>               150.00 
+"INFO sapinvoices.sap.run(): Monographs control file contents:"
+<hashed_monographs_control_file_contents>
+"INFO sapinvoices.sap.run(): Real run, sending files to SAP dropbox"
+"INFO paramiko.transport._log(): Connected (version 1.99, client OpenSSH_5.3)"
+"INFO paramiko.transport._log(): Authentication (publickey) successful!"
+"INFO paramiko.transport.sftp._log(): [chan 0] Opened sftp connection (server version 3)"
+"INFO sapinvoices.sap.run(): Sent data file 'dlibsapg.<sequence_number>.<date_string>' to SAP dropbox prod"
+"INFO sapinvoices.sap.run(): Sent control file 'clibsapg.<sequence_number>.<date_string>' to SAP dropbox prod"
+"INFO paramiko.transport.sftp._log(): [chan 0] sftp session closed."
+"INFO sapinvoices.sap.run(): Real run, updating SAP sequence in Parameter Store"
+"INFO sapinvoices.ssm.__init__(): Initializing SSM client with endpoint: https://ssm.us-east-1.amazonaws.com"
+"INFO sapinvoices.ssm.update_parameter_value(): SSM parameter '/apps/sapinvoices/sap-sequence' was updated to '<sequence_number>,<date_string>,mono' with type=StringList"
+"INFO sapinvoices.sap.run(): Real run, marking invoices PAID in Alma"
+"INFO sapinvoices.sap.run(): 3 monograph invoices successfully marked as paid in Alma"
+"INFO sapinvoices.sap.run(): Monographs email sent with message ID: <email_message_id>"
+"INFO sapinvoices.sap.run(): Starting file generation process for run serial"
+"INFO sapinvoices.sap.run(): Generated next SAP file names: dlibsapg.<sequence_number_+1>.<date_string>, clibsapg.<sequence_number_+1>.<date_string>"
+"INFO sapinvoices.sap.run(): Generating serials summary"
+"INFO sapinvoices.sap.run(): Generating serials report"
+"INFO sapinvoices.sap.run(): Final run, generating files for SAP"
+"INFO sapinvoices.sap.run(): Serials data file contents:"
+"B202407022024070224-102212240321 X000400000          1500.00         Just Spaghetti Catering Company             Fiesole (Firenze)                  Via Benedetto da Maiano, 3                                             50014        IT                                                                                      "
+C<funds_gl_account>    <funds_cost_object>               750.00 
+D<funds_gl_account>    <funds_cost_object>               750.00 
+"INFO sapinvoices.sap.run(): Serials control file contents:"
+<hashed_serials_control_file_contents>
+"INFO sapinvoices.sap.run(): Real run, sending files to SAP dropbox"
+"INFO paramiko.transport._log(): Connected (version 1.99, client OpenSSH_5.3)"
+"INFO paramiko.transport._log(): Authentication (publickey) successful!"
+"INFO paramiko.transport.sftp._log(): [chan 0] Opened sftp connection (server version 3)"
+"INFO sapinvoices.sap.run(): Sent data file 'dlibsapg.<sequence_number_+1>.<date_string>' to SAP dropbox prod"
+"INFO sapinvoices.sap.run(): Sent control file 'clibsapg.<sequence_number_+1>.<date_string>' to SAP dropbox prod"
+"INFO paramiko.transport.sftp._log(): [chan 0] sftp session closed."
+"INFO sapinvoices.sap.run(): Real run, updating SAP sequence in Parameter Store"
+"INFO sapinvoices.ssm.__init__(): Initializing SSM client with endpoint: https://ssm.us-east-1.amazonaws.com"
+"INFO sapinvoices.ssm.update_parameter_value(): SSM parameter '/apps/sapinvoices/sap-sequence' was updated to '<sequence_number_+1>,<date_string>,ser' with type=StringList"
+"INFO sapinvoices.sap.run(): Real run, marking invoices PAID in Alma"
+"INFO sapinvoices.sap.run(): 2 serial invoices successfully marked as paid in Alma"
+"INFO sapinvoices.sap.run(): Serials email sent with message ID: <email_message_id>"
+"INFO sapinvoices.cli.process_invoices(): SAP invoice process completed for a final run"
+3 monograph invoices retrieved and processed:
+2 SAP monograph invoices
+1 other payment monograph invoices
+2 serial invoices retrieved and processed

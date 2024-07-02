@@ -1,15 +1,18 @@
 # ruff: noqa: E501, PT004
 import json
+from datetime import timedelta
 from unittest.mock import patch
 
 import boto3
+import pandas as pd
 import pytest
 from moto import mock_aws
 from moto.core import DEFAULT_ACCOUNT_ID as ACCOUNT_ID
+from moto.core.utils import unix_time_millis, utcnow
 from moto.moto_api import state_manager
 
 from webapp import Config, create_app
-from webapp.utils.aws import ECSClient
+from webapp.utils.aws import CloudWatchLogsClient, ECSClient
 
 AWS_DEFAULT_REGION = "us-east-1"
 
@@ -28,6 +31,9 @@ def _test_env(monkeypatch):
     monkeypatch.setenv(
         "ALMA_SAP_INVOICES_ECS_NETWORK_CONFIG",
         '{"awsvpcConfiguration": {"securityGroups": ["sg-abc123"], "subnets": ["subnet-abc123"]}}',
+    )
+    monkeypatch.setenv(
+        "ALMA_SAP_INVOICES_CLOUDWATCH_LOG_GROUP", "mock-sapinvoices-ecs-test"
     )
     monkeypatch.setenv("WORKSPACE", "test")
     monkeypatch.setenv("SENTRY_DSN", "https://1234567890@00000.ingest.sentry.io/123456")
@@ -52,6 +58,11 @@ def sapinvoices_client(sapinvoices_app):
 @pytest.fixture
 def ecs_client(mock_ecs_cluster, mock_ecs_task_definition, mock_ecs_network_config):
     return ECSClient()
+
+
+@pytest.fixture
+def cloudwatchlogs_client():
+    return CloudWatchLogsClient()
 
 
 @pytest.fixture
@@ -130,23 +141,121 @@ def ecs_client_execute_run_details_success(
 
 @pytest.fixture
 def ecs_client_get_active_tasks_success(
-    boto3_ecs_client_describe_task_response_success, mock_boto3_client
+    boto3_ecs_client_describe_tasks_response_success, mock_boto3_client
 ):
     mock_boto3_client.describe_tasks.return_value = (
-        boto3_ecs_client_describe_task_response_success
+        boto3_ecs_client_describe_tasks_response_success
     )
-
-
-@pytest.fixture
-def boto3_ecs_client_describe_task_response_success():
-    with open("tests/fixtures/ecs_describe_task_response_success.json") as file:
-        return json.loads(file.read())
 
 
 @pytest.fixture
 def boto3_ecs_client_run_task_response_success():
     with open("tests/fixtures/ecs_run_task_response_success.json") as file:
         return json.loads(file.read())
+
+
+@pytest.fixture
+def boto3_ecs_client_describe_tasks_response_success():
+    with open("tests/fixtures/ecs_describe_tasks_response_success.json") as file:
+        return json.loads(file.read())
+
+
+@pytest.fixture
+def mock_cloudwatchlogs_log_group():
+    with mock_aws():
+        logs = boto3.client("logs", region_name=AWS_DEFAULT_REGION)
+        log_group_name = "mock-sapinvoices-ecs-test"
+        logs.create_log_group(logGroupName=log_group_name)
+        yield log_group_name
+
+
+@pytest.fixture
+def mock_cloudwatchlogs_log_stream_review_run_task(
+    cloudwatch_sapinvoices_review_run_logs, mock_cloudwatchlogs_log_group
+):
+    """Mocks CloudWatch log stream for a 'review run' of SAP invoice processing.
+
+    A log stream is created for the mocked CloudWatch log group.
+    Mock events are derived from a CSV file representing the logged messages from a
+    a 'review run'. These mocked events are then placed on the mocked log stream.
+
+    The CSV file was exported from CloudWatch and changed slightly for
+    testing purposes:
+
+      * The 'timestamp' column was removed as the past dates conflicted with the
+        ingestion timestamp when putting log events to the stream.
+      * Current timestamps are generated for every logged message.
+      * Stats indicated in the logs were updated.
+      * To avoid confusion, the past dates were also removed from the values of
+        the "messages" column (i.e., the logged messages normally lead with a
+        timestamp formatted like so "2024-07-02 13:58:20,524").
+    """
+    # create log group and log stream
+    logs = boto3.client("logs", region_name=AWS_DEFAULT_REGION)
+    task_id = "abc001"
+    log_stream_name = f"sapinvoices/mock-sapinvoices-ecs-test/{task_id}"
+    logs.create_log_stream(
+        logGroupName=mock_cloudwatchlogs_log_group, logStreamName=log_stream_name
+    )
+
+    # put events on logstream
+    timestamped_events = [
+        (int(unix_time_millis(utcnow() + timedelta(seconds=count))), event)
+        for count, event in enumerate(cloudwatch_sapinvoices_review_run_logs)
+    ]
+    logs.put_log_events(
+        logGroupName=mock_cloudwatchlogs_log_group,
+        logStreamName=log_stream_name,
+        logEvents=[
+            {"timestamp": timestamp, "message": message}
+            for timestamp, message in timestamped_events
+        ],
+    )
+
+
+@pytest.fixture
+def mock_cloudwatchlogs_log_stream_final_run_task(
+    cloudwatch_sapinvoices_final_run_logs, mock_cloudwatchlogs_log_group
+):
+    """Mocks CloudWatch log stream for a 'final run' of SAP invoice processing.
+
+    See docstring for 'mock_cloudwatchlogs_log_stream_review_run_task'.
+    """
+    # create log group and log stream
+    logs = boto3.client("logs", region_name=AWS_DEFAULT_REGION)
+    task_id = "abc002"
+    log_stream_name = f"sapinvoices/mock-sapinvoices-ecs-test/{task_id}"
+    logs.create_log_stream(
+        logGroupName=mock_cloudwatchlogs_log_group, logStreamName=log_stream_name
+    )
+
+    # put events on logstream
+    timestamped_events = [
+        (int(unix_time_millis(utcnow() + timedelta(seconds=count))), event)
+        for count, event in enumerate(cloudwatch_sapinvoices_final_run_logs)
+    ]
+    logs.put_log_events(
+        logGroupName=mock_cloudwatchlogs_log_group,
+        logStreamName=log_stream_name,
+        logEvents=[
+            {"timestamp": timestamp, "message": message}
+            for timestamp, message in timestamped_events
+        ],
+    )
+
+
+@pytest.fixture
+def cloudwatch_sapinvoices_review_run_logs():
+    return pd.read_csv("tests/fixtures/cloudwatch_sapinvoices_review_run_logs.csv")[
+        "message"
+    ].to_list()
+
+
+@pytest.fixture
+def cloudwatch_sapinvoices_final_run_logs():
+    return pd.read_csv("tests/fixtures/cloudwatch_sapinvoices_final_run_logs.csv")[
+        "message"
+    ].to_list()
 
 
 @pytest.fixture

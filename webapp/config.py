@@ -20,6 +20,7 @@ class Config:
         "ALMA_SAP_INVOICES_ECS_CLUSTER",
         "ALMA_SAP_INVOICES_ECS_TASK_DEFINITION",
         "ALMA_SAP_INVOICES_ECS_NETWORK_CONFIG",
+        "ALMA_SAP_INVOICES_CLOUDWATCH_LOG_GROUP",
         "WORKSPACE",
     )
     OPTIONAL_ENV_VARS = ()
@@ -58,6 +59,10 @@ class Config:
     @property
     def ALMA_SAP_INVOICES_ECS_TASK_DEFINITION(self) -> str:
         return self._getenv("ALMA_SAP_INVOICES_ECS_TASK_DEFINITION")
+
+    @property
+    def ALMA_SAP_INVOICES_CLOUDWATCH_LOG_GROUP(self) -> str:
+        return self._getenv("ALMA_SAP_INVOICES_CLOUDWATCH_LOG_GROUP")
 
     @property
     def SENTRY_DSN(self) -> str:
