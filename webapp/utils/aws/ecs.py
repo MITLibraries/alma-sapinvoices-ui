@@ -9,7 +9,7 @@ from attrs import define, field
 if TYPE_CHECKING:
     from mypy_boto3_ecs.client import ECSClient as ECSClientType
 
-from webapp import Config
+from webapp.config import Config
 from webapp.exceptions import (
     ECSTaskDefinitionDoesNotExistError,
     ECSTaskDoesNotExistError,
@@ -46,11 +46,11 @@ class ECSClient:
 
     def execute_review_run(self) -> str | None:
         logger.info("Executing ECS task for 'Review Run'")
-        return self.run(run_type="review", commands=["--real"])
+        return self.run(run_type="review", commands=["--blah"])
 
     def execute_final_run(self) -> str | None:
         logger.info("Executing ECS task for 'Final Run'")
-        return self.run(run_type="final", commands=["--real", "--final"])
+        return self.run(run_type="final", commands=["--blah", "--bloop"])
 
     def run(
         self, run_type: Literal["review", "final"], commands: list | None = None
@@ -127,15 +127,17 @@ class ECSClient:
             dict: Active task IDs (keys) and the corresponding
                 'createdAt' timestamps (values).
         """
-        response = self.client.describe_tasks(
-            cluster=self.cluster, tasks=self.get_tasks()
-        )
-        active_tasks = {
-            task["taskArn"].split("/")[-1]: task["createdAt"]
-            for task in response["tasks"]
-            if task["lastStatus"] != "STOPPED"
-        }
-        return dict(sorted(active_tasks.items(), key=lambda item: item[1], reverse=True))
+        if any(tasks := self.get_tasks()):
+            response = self.client.describe_tasks(cluster=self.cluster, tasks=tasks)
+            active_tasks = {
+                task["taskArn"].split("/")[-1]: task["createdAt"]
+                for task in response["tasks"]
+                if task["lastStatus"] != "STOPPED"
+            }
+            return dict(
+                sorted(active_tasks.items(), key=lambda item: item[1], reverse=True)
+            )
+        return None
 
     def task_exists(self, task_id: str) -> bool:
         """Determine if the task exists.

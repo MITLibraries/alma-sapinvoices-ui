@@ -146,6 +146,13 @@ def ecs_client_get_active_tasks_success(
     mock_boto3_client.describe_tasks.return_value = (
         boto3_ecs_client_describe_tasks_response_success
     )
+    with patch(
+        "webapp.utils.aws.ECSClient.get_tasks"
+    ) as mock_webapp_ecs_client_get_tasks:
+        mock_webapp_ecs_client_get_tasks.return_value = [
+            "arn:aws:ecs:us-east-1:123456789012:task/mock-sapinvoices-ecs-test/abc123"
+        ]
+        yield
 
 
 @pytest.fixture

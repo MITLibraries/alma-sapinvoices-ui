@@ -24,7 +24,7 @@ def lambda_handler(event: dict, context: dict) -> dict:
     CONFIG.configure_logger(verbose=True)
     CONFIG.configure_sentry()
 
-    apig_wsgi_handler = make_lambda_handler(create_app(CONFIG))
+    apig_wsgi_handler = make_lambda_handler(create_app())
 
     try:
         logger.debug(json.dumps(event))

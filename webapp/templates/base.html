@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8" />
+    <title>Alma SAP Invoices - {% block title %}{% endblock title %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='libraries-main.min.css') }}">
+    <link rel="stylesheet", href="{{ url_for('static', filename='libraries-additional.min.css') }}">
+    <link rel="icon", href="https://cdn.libraries.mit.edu/files/branding/favicons/favicon.ico"></link>
+  </head>
+  <body>
+    <div class="wrap-page">
+      {% include("_includes/header-site-slim.html") %}
+      {% include("_includes/breadcrumb.html") %}
+  
+      {% block header %}{% endblock header %}
+
+      <div class="wrap-outer-content layout-band">
+        <div class="wrap-content">
+          <main id="content-main" class="content-main" role="main">
+            {% block content %}{% endblock content %}
+          </main>
+        </div>
+      </div>
+
+      {% include("_includes/footer-site-slim.html") %}
+    </div>
+    {% block script %}{% endblock script %}
+  </body>
+</html>
