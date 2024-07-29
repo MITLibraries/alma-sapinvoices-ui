@@ -6,6 +6,7 @@ import pytest
 
 from webapp.exceptions import (
     ECSTaskDefinitionDoesNotExistError,
+    ECSTaskDoesNotExistError,
     ECSTaskRuntimeExceededTimeoutError,
 )
 from webapp.utils.aws import ECSClient
@@ -22,14 +23,6 @@ def test_ecs_client_init_success(ecs_client):
     assert ecs_client.container == os.environ["ALMA_SAP_INVOICES_ECR_IMAGE_NAME"]
 
 
-def test_ecs_client_task_family_revision_property_success(ecs_client):
-    assert (
-        ecs_client.task_definition
-        == "arn:aws:ecs:us-east-1:123456789012:task-definition/mock-sapinvoices-ecs-test:1"
-    )
-    assert ecs_client.task_family_revision == "mock-sapinvoices-ecs-test:1"
-
-
 def test_ecs_client_task_family_property_success(ecs_client):
     assert (
         ecs_client.task_definition
@@ -38,35 +31,55 @@ def test_ecs_client_task_family_property_success(ecs_client):
     assert ecs_client.task_family == "mock-sapinvoices-ecs-test"
 
 
+def test_ecs_client_task_family_revision_property_success(ecs_client):
+    assert (
+        ecs_client.task_definition
+        == "arn:aws:ecs:us-east-1:123456789012:task-definition/mock-sapinvoices-ecs-test:1"
+    )
+    assert ecs_client.task_family_revision == "mock-sapinvoices-ecs-test:1"
+
+
 def test_ecs_client_execute_review_run_success(
     ecs_client, ecs_client_execute_run_details_success, caplog
 ):
-    assert ecs_client.execute_review_run() == {
-        "task_run_arn": "arn:aws:ecs:us-east-1:123456789012:task/mock-sapinvoices-ecs-test/abc123",
-        "status": "PROVISIONING",
-        "created_at": "2024-07-02T10:16:43.077000-04:00",
-        "stopped_at": None,
-    }
+    assert (
+        ecs_client.execute_review_run()
+        == "arn:aws:ecs:us-east-1:123456789012:task/mock-sapinvoices-ecs-test/abc123"
+    )
     assert "Executing ECS task for 'Review Run'" in caplog.text
 
 
 def test_ecs_client_execute_final_run_success(
     ecs_client, ecs_client_execute_run_details_success, caplog
 ):
-    assert ecs_client.execute_final_run() == {
-        "task_run_arn": "arn:aws:ecs:us-east-1:123456789012:task/mock-sapinvoices-ecs-test/abc123",
-        "status": "PROVISIONING",
-        "created_at": "2024-07-02T10:16:43.077000-04:00",
-        "stopped_at": None,
-    }
+    assert (
+        ecs_client.execute_final_run()
+        == "arn:aws:ecs:us-east-1:123456789012:task/mock-sapinvoices-ecs-test/abc123"
+    )
     assert "Executing ECS task for 'Final Run'" in caplog.text
 
 
-def test_ecs_client_run_task_if_run_type_is_invalid(ecs_client):
+def test_ecs_client_run_raise_error_if_run_type_is_invalid(ecs_client):
     with pytest.raises(
         ValueError, match="Cannot run task for unrecognized run_type='invalid'"
     ):
         ecs_client.run(run_type="invalid")
+
+
+def test_client_run_raise_error_if_task_definition_does_not_exist(
+    mock_ecs_task_definition,
+):
+    bad_ecs_client = ECSClient(
+        cluster="test",
+        task_definition="DOES_NOT_EXIST",
+        network_configuration="test",
+        container="test",
+    )
+    with pytest.raises(
+        ECSTaskDefinitionDoesNotExistError,
+        match="No task definition found for 'DOES_NOT_EXIST'.",
+    ):
+        bad_ecs_client.run(run_type="review")
 
 
 def test_ecs_client_monitor_task_success(
@@ -87,11 +100,10 @@ def test_ecs_client_monitor_task_success(
     ecs_client.monitor_task(task_arn)
     for status in ("DEACTIVATING", "STOPPING", "DEPROVISIONING", "STOPPED"):
         assert status in caplog.text
-
     assert "Task run has completed." in caplog.text
 
 
-def test_ecs_client_monitor_task_raise_timeout_error(
+def test_ecs_client_monitor_task_raise_error(
     ecs_client, mock_ecs_task_state_transitions, caplog
 ):
 
@@ -104,19 +116,42 @@ def test_ecs_client_monitor_task_raise_timeout_error(
         ecs_client.monitor_task(task_arn, timeout=2)
 
 
-def test_ecs_client_task_exists_success(ecs_client, mock_ecs_task_definition):
-    assert ecs_client.task_exists()
+def test_ecs_client_get_task_status_success(ecs_client, mock_ecs_task_state_transitions):
+    task_arn = mock_ecs_task_state_transitions
+    assert ecs_client.get_task_status(task_id=task_arn.split("/")[-1]) == "DEACTIVATING"
 
 
-def test_ecs_client_task_exists_error(mock_ecs_task_definition):
+def test_ecs_client_get_task_status_raise_error(ecs_client):
+    with pytest.raises(
+        ECSTaskDoesNotExistError, match="No tasks found for id 'DOES_NOT_EXIST'."
+    ):
+        assert ecs_client.get_task_status(task_id="DOES_NOT_EXIST")
+
+
+def test_ecs_client_get_active_tasks_success(
+    ecs_client, ecs_client_get_active_tasks_success
+):
+    assert ecs_client.get_active_tasks() == {"abc123": "2024-07-29T17:16:13.688000-04:00"}
+
+
+def test_ecs_client_task_exists_returns_true(ecs_client, mock_ecs_task_state_transitions):
+    task_arn = mock_ecs_task_state_transitions
+    assert ecs_client.task_exists(task_id=task_arn.split("/")[-1])
+
+
+def test_ecs_client_task_exists_returns_false(ecs_client):
+    assert ecs_client.task_exists(task_id="DOES_NOT_EXIST") is False
+
+
+def test_ecs_client_task_definition_returns_true(ecs_client, mock_ecs_task_definition):
+    assert ecs_client.task_definition_exists() is True
+
+
+def test_ecs_client_task_definition_exists_returns_false(mock_ecs_task_definition):
     bad_ecs_client = ECSClient(
         cluster="test",
         task_definition="DOES_NOT_EXIST",
         network_configuration="test",
         container="test",
     )
-    with pytest.raises(
-        ECSTaskDefinitionDoesNotExistError,
-        match="No task definition found for 'DOES_NOT_EXIST'",
-    ):
-        _ = bad_ecs_client.task_exists()
+    assert bad_ecs_client.task_definition_exists() is False

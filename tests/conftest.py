@@ -72,8 +72,6 @@ def mock_ecs_cluster():
 def mock_ecs_task_definition():
     with mock_aws():
         ecs = boto3.client("ecs", region_name=AWS_DEFAULT_REGION)
-
-        # Registering with minimal definition
         definition = {
             "family": "mock-sapinvoices-ecs-test",
             "containerDefinitions": [
@@ -102,11 +100,10 @@ def mock_ecs_network_config():
 def mock_ecs_task_state_transitions(
     mock_ecs_cluster, mock_ecs_task_definition, mock_ecs_network_config
 ):
-    state_manager.set_transition(
-        model_name="ecs::task", transition={"progression": "manual", "times": 1}
-    )
-
     with mock_aws():
+        state_manager.set_transition(
+            model_name="ecs::task", transition={"progression": "manual", "times": 1}
+        )
         ecs = boto3.client("ecs", region_name=AWS_DEFAULT_REGION)
         response = ecs.run_task(
             cluster="mock-sapinvoices-ecs-test",
@@ -124,12 +121,26 @@ def ecs_client_execute_run_details_success(
     mock_boto3_client,
 ):
     mock_boto3_client.run_task.return_value = boto3_ecs_client_run_task_response_success
-
     with patch(
-        "webapp.utils.aws.ECSClient.task_exists"
+        "webapp.utils.aws.ECSClient.task_definition_exists"
     ) as mock_webapp_ecs_client_task_exists:
         mock_webapp_ecs_client_task_exists.return_value = True
         yield
+
+
+@pytest.fixture
+def ecs_client_get_active_tasks_success(
+    boto3_ecs_client_describe_task_response_success, mock_boto3_client
+):
+    mock_boto3_client.describe_tasks.return_value = (
+        boto3_ecs_client_describe_task_response_success
+    )
+
+
+@pytest.fixture
+def boto3_ecs_client_describe_task_response_success():
+    with open("tests/fixtures/ecs_describe_task_response_success.json") as file:
+        return json.loads(file.read())
 
 
 @pytest.fixture
