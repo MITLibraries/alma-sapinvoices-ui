@@ -12,6 +12,7 @@ if TYPE_CHECKING:
 from webapp import Config
 from webapp.exceptions import (
     ECSTaskDefinitionDoesNotExistError,
+    ECSTaskDoesNotExistError,
     ECSTaskRuntimeExceededTimeoutError,
 )
 
@@ -36,29 +37,30 @@ class ECSClient:
         return boto3.client("ecs")
 
     @property
-    def task_family_revision(self) -> str:
-        return self.task_definition.split("/")[-1]
-
-    @property
     def task_family(self) -> str:
         return re.sub(":.*", "", self.task_family_revision)
 
-    def execute_review_run(self) -> dict | None:
+    @property
+    def task_family_revision(self) -> str:
+        return self.task_definition.split("/")[-1]
+
+    def execute_review_run(self) -> str | None:
         logger.info("Executing ECS task for 'Review Run'")
         return self.run(run_type="review", commands=["--real"])
 
-    def execute_final_run(self) -> dict | None:
+    def execute_final_run(self) -> str | None:
         logger.info("Executing ECS task for 'Final Run'")
         return self.run(run_type="final", commands=["--real", "--final"])
 
     def run(
         self, run_type: Literal["review", "final"], commands: list | None = None
-    ) -> dict | None:
+    ) -> str | None:
+        """Execute an ECS task run."""
         if run_type not in ["review", "final"]:
             message = f"Cannot run task for unrecognized run_type='{run_type}'"
             raise ValueError(message)
 
-        if self.task_exists():
+        if self.task_definition_exists():
             response = self.client.run_task(
                 cluster=self.cluster,
                 launchType="FARGATE",
@@ -73,10 +75,10 @@ class ECSClient:
                 },
                 taskDefinition=self.task_definition,
             )
-            return self.parse_run_details(response)  # type: ignore[arg-type]
-        return None
+            return response["tasks"][0]["taskArn"]
+        raise ECSTaskDefinitionDoesNotExistError(self.task_definition)
 
-    def monitor_task(self, task: str, timeout: int = 600) -> dict:
+    def monitor_task(self, task_id: str, timeout: int = 600) -> None:
         """Polls ECS for task status updates.
 
         This method will periodically (every 5 seconds) check for the status
@@ -87,43 +89,95 @@ class ECSClient:
         while True:
             if time.time() - start > timeout:
                 raise ECSTaskRuntimeExceededTimeoutError(timeout)
-            response = self.client.describe_tasks(cluster=self.cluster, tasks=[task])
-            task_run_details = self.parse_run_details(response)  # type: ignore[arg-type]
-            task_status = task_run_details["status"]
-
-            message = f"Status for task {task}: {task_status}"
-            logger.info(message)
-
+            task_status = self.get_task_status(task_id)
             if task_status == "STOPPED":
                 logger.info("Task run has completed.")
                 break
             time.sleep(5)
-        return task_run_details
 
-    def task_exists(self) -> bool | None:
+    def get_task_status(self, task_id: str) -> str:
+        """Get status of an ECS task.
+
+        For more information on the different stages of the ECS task lifecycle,
+        see https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-lifecycle-explanation.html.
+
+        Args:
+            task_id (str): ECS task ID.
+
+        Returns:
+            str: Status of an ECS task, representing a stage of the task lifecycle.
+        """
+        if self.task_exists(task_id):
+            response = self.client.describe_tasks(cluster=self.cluster, tasks=[task_id])
+            task_status = response["tasks"][0]["lastStatus"]
+            message = f"Status for task {task_id}: {task_status}"
+            logger.info(message)
+            return task_status
+        raise ECSTaskDoesNotExistError(task_id)
+
+    def get_active_tasks(self) -> dict:
+        """Get active ECS tasks.
+
+        Tasks are considered 'active' when their 'lastStatus'
+        is not "STOPPED". The method returns a dictionary of
+        task IDs, sorted by the 'createdAt' timestamps in
+        descending (most recent) order.
+
+        Returns:
+            dict: Active task IDs (keys) and the corresponding
+                'createdAt' timestamps (values).
+        """
+        response = self.client.describe_tasks(
+            cluster=self.cluster, tasks=self.get_tasks()
+        )
+        active_tasks = {
+            task["taskArn"].split("/")[-1]: task["createdAt"]
+            for task in response["tasks"]
+            if task["lastStatus"] != "STOPPED"
+        }
+        return dict(sorted(active_tasks.items(), key=lambda item: item[1], reverse=True))
+
+    def task_exists(self, task_id: str) -> bool:
+        """Determine if the task exists.
+
+        Given a task ID, this method will determine whether the task
+        exists by looping through the list of ARNs recently executed ECS
+        tasks and checking if the task ID appears in any of the task ARNs.
+
+        Note: Task runs are retained by ECS for a limited amount of time.
+
+        Args:
+            task_id (str): ECS task ID.
+
+        Returns:
+            bool: If task run exists, return True, else False.
+        """
+        return any(task_id in task_arn for task_arn in self.get_tasks())
+
+    def task_definition_exists(self) -> bool:
+        """Determine if the task definition exists.
+
+        This method will determine if the task definition exists by
+        looping through the list of task definition ARNs and seeing if
+        ECSClient.task_family_revision appears in any of the task definition
+        ARNS.
+        """
         response = self.client.list_task_definitions(
             familyPrefix=self.task_family, sort="DESC"
         )
-        valid_tasks = [task.split("/")[-1] for task in response["taskDefinitionArns"]]
+        existing_task_definitions = [
+            task.split("/")[-1] for task in response["taskDefinitionArns"]
+        ]
+        return self.task_family_revision in existing_task_definitions
 
-        if self.task_family_revision in valid_tasks:
-            return True
-        raise ECSTaskDefinitionDoesNotExistError(self.task_definition)
-
-    def parse_run_details(self, details: dict) -> dict:
-        """Parse task run details.
-
-        Note: While the 'taskArn' and 'lastStatus' parameters are automatically populated
-              when an ECS task is kicked off, other parameters -- like 'createdAt'
-              and 'stoppedAt' are populated as the task is running.
-
-        For more information on the response syntax provided by boto3.ECS.Client.run_task,
-        see https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/ecs/client/run_task.html.
-        """
-        task_details = details["tasks"][0]
-        return {
-            "task_run_arn": task_details["taskArn"],
-            "status": task_details["lastStatus"],
-            "created_at": task_details.get("createdAt"),
-            "stopped_at": task_details.get("stoppedAt"),
-        }
+    def get_tasks(self) -> list[str]:
+        """Get list of all ECS tasks."""
+        existing_tasks = set()
+        for status in ["RUNNING", "PENDING", "STOPPED"]:
+            response = self.client.list_tasks(
+                cluster=self.cluster,
+                family=self.task_family,
+                desiredStatus=status,  # type: ignore[arg-type]
+            )
+            existing_tasks.update(response["taskArns"])
+        return list(existing_tasks)

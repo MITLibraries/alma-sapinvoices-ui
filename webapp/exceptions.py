@@ -2,6 +2,13 @@ class InvalidNetworkConfigurationError(Exception):
     """Exception to raise when ALMA_SAP_INVOICES_ECS_NETWORK_CONFIG is invalid."""
 
 
+class ECSTaskDoesNotExistError(Exception):
+    """Exception to raise when an ECS task run is not found in ECS task history."""
+
+    def __init__(self, task_id: str) -> None:
+        super().__init__(f"No tasks found for id '{task_id}'.")
+
+
 class ECSTaskDefinitionDoesNotExistError(Exception):
     """Exception to raise when ALMA_SAP_INVOICES_ECS_TASK_DEFINITION does not exist."""
 
