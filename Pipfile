@@ -12,10 +12,11 @@ sentry-sdk = "*"
 
 [dev-packages]
 black = "*"
-boto3-stubs = {version = "*", extras = ["ecs"]}
+boto3-stubs = {version = "*", extras = ["ecs", "logs"]}
 coveralls = "*"
 moto = "*"
 mypy = "*"
+pandas = "*"
 pre-commit = "*"
 pytest = "*"
 ruff = "*"

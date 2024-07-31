@@ -9,7 +9,7 @@ def create_app(config: Config) -> Flask:
 
     @app.route("/")
     def hello_world() -> str:
-        return f"Hello, World! WORKSPACE={app.config['WORKSPACE']}"
+        return f"Hello, World! WORKSPACE={app.config["WORKSPACE"]}"
 
     @app.route("/about")
     def about() -> str:

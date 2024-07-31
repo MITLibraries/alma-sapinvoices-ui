@@ -2,6 +2,13 @@ class InvalidNetworkConfigurationError(Exception):
     """Exception to raise when ALMA_SAP_INVOICES_ECS_NETWORK_CONFIG is invalid."""
 
 
+class ECSTaskLogStreamDoesNotExistError(Exception):
+    """Exception to raise when a log stream is not found."""
+
+    def __init__(self, task_id: str) -> None:
+        super().__init__(f"No log streams found for task id '{task_id}'.")
+
+
 class ECSTaskDoesNotExistError(Exception):
     """Exception to raise when an ECS task run is not found in ECS task history."""
 

@@ -1,0 +1,33 @@
+message
+"INFO sapinvoices.cli.process_invoices(): Logger 'root' configured with level=INFO"
+"INFO sapinvoices.cli.process_invoices(): Sentry DSN found, exceptions will be sent to Sentry with env=prod"
+"INFO sapinvoices.cli.process_invoices(): alma-sapinvoices config settings loaded for environment: prod"
+"INFO sapinvoices.cli.process_invoices(): Starting SAP invoices process with options: "
+"INFO sapinvoices.cli.process_invoices(): Date: 2024-07-02 13:57:52.457052+00:00 "
+"INFO sapinvoices.cli.process_invoices(): Final run: False "
+"INFO sapinvoices.cli.process_invoices(): Real run: True"
+"INFO sapinvoices.cli.process_invoices(): 5 invoices retrieved from Alma"
+"INFO sapinvoices.sap.parse_invoice_records(): Extracting data for invoice record 001, record 1 of 5"
+"INFO sapinvoices.sap.parse_invoice_records(): Extracting data for invoice record 002, record 2 of 5"
+"INFO sapinvoices.sap.parse_invoice_records(): Extracting data for invoice record 003, record 3 of 5"
+"INFO sapinvoices.sap.parse_invoice_records(): Extracting data for invoice record 004, record 4 of 5"
+"INFO sapinvoices.sap.parse_invoice_records(): Extracting data for invoice record 005, record 5 of 5"
+"INFO sapinvoices.cli.process_invoices(): 0 problem invoices found."
+"INFO sapinvoices.cli.process_invoices(): 3 monograph invoices retrieved and parsed."
+"INFO sapinvoices.cli.process_invoices(): 2 serial invoices retrieved and parsed."
+"INFO sapinvoices.ssm.__init__(): Initializing SSM client with endpoint: https://ssm.us-east-1.amazonaws.com"
+"INFO sapinvoices.sap.run(): Starting file generation process for run monograph"
+"INFO sapinvoices.sap.run(): Generated next SAP file names: dlibsapg.<sequence_number>.<date_string>, clibsapg.<sequence_number>.<date_string>"
+"INFO sapinvoices.sap.run(): Generating monographs summary"
+"INFO sapinvoices.sap.run(): Generating monographs report"
+"INFO sapinvoices.sap.run(): Monographs email sent with message ID: abc001"
+"INFO sapinvoices.sap.run(): Starting file generation process for run serial"
+"INFO sapinvoices.sap.run(): Generated next SAP file names: dlibsapg.<sequence_number>.<date_string>, clibsapg.<sequence_number>.<date_string>"
+"INFO sapinvoices.sap.run(): Generating serials summary"
+"INFO sapinvoices.sap.run(): Generating serials report"
+"INFO sapinvoices.sap.run(): Serials email sent with message ID: abc002"
+"INFO sapinvoices.cli.process_invoices(): SAP invoice process completed for a review run"
+3 monograph invoices retrieved and processed:
+2 SAP monograph invoices
+1 other payment monograph invoices
+2 serial invoices retrieved and processed
