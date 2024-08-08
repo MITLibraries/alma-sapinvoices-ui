@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block title %}400 Bad Request{% endblock title %}
+
+{% block header %}
+{% endblock header %}
+
+{% block content %}
+<h1>Cannot execute multiple runs at the same time.</h1>
+<h2>Found {{ active_tasks | length }} active task(s).</h2>
+<ul>
+    {% for task_id, task_started_at in active_tasks.items() %}
+        <li>
+            <a href="{{ url_for('process_invoices_status', task_id=task_id)}}" >
+                {{ task_id }} (Started at: {{ task_started_at}})
+            </a></li>
+    {% endfor %}
+</ul>
+<p>Wait for all active runs to complete before executing another.</p>
+{% endblock content %}

@@ -1,0 +1,30 @@
+.platform-name {
+    color: #fff;
+    font-size: clamp(1rem,5vw,2.8rem);
+    text-decoration: none;
+    white-space: nowrap;
+
+    &:hover,
+    &:focus {
+        color: white;
+        text-decoration: underline;
+    } 
+}
+
+.wrap-header-core {
+    width: unset;
+    border-right: 1px solid #fff;
+    margin-right: 2rem;
+    padding-right: 2rem;
+}
+
+.wrap-header .header-slim{
+    align-items: center;
+    display: flex;
+    flex-flow: row nowrap;
+}
+
+.wrap-header-platform{
+    flex-grow: 2
+}
+

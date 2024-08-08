@@ -140,3 +140,6 @@ dmypy.json
 
 # output
 output/
+
+# tmp
+tmp/

@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block title %}Monitor task{% endblock title %}
+
+{% block header %}
+{% endblock header %}
+
+{% block content %}
+  <h1>Monitor runs</h1>
+  <p>
+    This page displays the status of an executed run alongside logs (retrieved from Amazon CloudWatch).
+    The logs will appear only when the executed run finishes (the status is marked "COMPLETED").
+    Emails are sent shortly after. While the logs may include information that is similar to
+    the email, the email is the best method for reviewing the output of an executed run.
+  </p>
+  <hr>
+  <div>
+    <h2>Run status</h2>
+    <p>Status: <span id="status">UNKNOWN</span></p>
+  </div>
+  <hr>
+  <div>
+    <h2>Run logs</h2>
+    <pre class="box-content">
+      <code id="logs">Logs will be displayed here.</code>
+    </pre>
+  </div>
+{% endblock content %}
+
+{% block script %}
+<script>
+  // URL to fetch JSON data from
+  const url = "{{ url_for('process_invoices_status_data', task_id=task_id) }}";
+  var status_element = document.getElementById("status");
+  var interval = setInterval(function () {
+    fetch_monitor_data()
+    if (status_element.textContent === "COMPLETED"){
+      clearInterval(interval);
+      return;
+    }
+  }, 2000);
+  // Fetch JSON data
+  function fetch_monitor_data() {
+    fetch(url)
+      .then(response => response.json())
+      .then(data => {
+        console.log(data);
+        // Update the content of the elements
+        status_element.textContent = data.status;
+        const logs_element = document.getElementById('logs');
+        logs_element.textContent = ''
+        data.logs.forEach(item => {
+          const line = document.createElement('p');
+          line.textContent = item;
+          logs_element.appendChild(line);
+        });
+      })
+      .catch(error => {
+        console.error('Error fetching data:', error);
+      });
+  }
+</script>
+{% endblock script %}
