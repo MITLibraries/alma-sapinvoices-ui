@@ -115,7 +115,7 @@ class ECSClient:
             return task_status
         raise ECSTaskDoesNotExistError(task_id)
 
-    def get_active_tasks(self) -> dict:
+    def get_active_tasks(self) -> dict | None:
         """Get active ECS tasks.
 
         Tasks are considered 'active' when their 'lastStatus'

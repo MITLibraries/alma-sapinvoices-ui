@@ -1,4 +1,5 @@
 from flask import Flask, jsonify, redirect, render_template, url_for
+from werkzeug.wrappers.response import Response
 
 from webapp.exceptions import ECSTaskLogStreamDoesNotExistError
 from webapp.utils import get_task_status_and_logs
@@ -17,7 +18,7 @@ def create_app() -> Flask:
         return render_template("process_invoices.html")
 
     @app.route("/process-invoices/run/<run_type>")
-    def process_invoices_run(run_type):
+    def process_invoices_run(run_type: str) -> str | Response:
         ecs_client = ECSClient()
         if active_tasks := ecs_client.get_active_tasks():
             return render_template(
@@ -28,11 +29,11 @@ def create_app() -> Flask:
             task_arn = ecs_client.execute_review_run()
         elif run_type == "final":
             task_arn = ecs_client.execute_final_run()
-        task_id = task_arn.split("/")[-1]
+        task_id = task_arn.split("/")[-1]  # type: ignore[union-attr]
         return redirect(url_for("process_invoices_status", task_id=task_id))
 
     @app.route("/process-invoices/status/<task_id>")
-    def process_invoices_status(task_id):
+    def process_invoices_status(task_id: str) -> str:
         try:
             _, logs = get_task_status_and_logs(task_id)
         except ECSTaskLogStreamDoesNotExistError as exception:
@@ -47,7 +48,7 @@ def create_app() -> Flask:
         )
 
     @app.route("/process-invoices/status/<task_id>/data")
-    def process_invoices_status_data(task_id):
+    def process_invoices_status_data(task_id: str) -> Response:
         try:
             task_status, logs = get_task_status_and_logs(task_id)
         except ECSTaskLogStreamDoesNotExistError:
