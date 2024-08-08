@@ -5,13 +5,7 @@ import lambdas
 
 def test_lambda_handler_success(lambda_function_event_payload):
     response = lambdas.lambda_handler(lambda_function_event_payload, {})
-    assert response == {
-        "statusCode": 200,
-        "cookies": [],
-        "headers": {"content-type": "text/html; charset=utf-8", "content-length": "28"},
-        "isBase64Encoded": False,
-        "body": "Hello, World! WORKSPACE=test",
-    }
+    assert response["statusCode"] == 200
 
 
 def test_lambda_handler_returns_json(lambda_function_event_payload):

@@ -47,7 +47,7 @@ def config():
 
 @pytest.fixture
 def sapinvoices_app(config):
-    return create_app(config)
+    return create_app()
 
 
 @pytest.fixture
