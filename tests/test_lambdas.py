@@ -3,7 +3,7 @@ import json
 import lambdas
 
 
-def test_lambda_handler_success(lambda_function_event_payload):
+def test_lambda_handler_success(lambda_function_event_payload, mock_parse_oidc_data):
     response = lambdas.lambda_handler(lambda_function_event_payload, {})
     assert response["statusCode"] == 200  # noqa: PLR2004
 

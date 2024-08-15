@@ -10,7 +10,10 @@
   <body>
     <div class="wrap-page">
       {% include("_includes/header-site-slim.html") %}
-      {% include("_includes/breadcrumb.html") %}
+      
+      {% block breadcrumb %}
+        {% include("_includes/breadcrumb.html") %}
+      {% endblock breadcrumb %}
   
       {% block header %}{% endblock header %}
 

@@ -1,5 +1,58 @@
+import base64
+import json
+from typing import Any
+
+import jwt
+import requests
+
+from webapp.config import Config
 from webapp.exceptions import ECSTaskDoesNotExistError
 from webapp.utils.aws import CloudWatchLogsClient, ECSClient
+
+
+def parse_oidc_data(
+    encoded_jwt: str,
+    options: dict[str, Any] | None = None,
+    *,
+    verify: bool = True,
+) -> Any:  # noqa: ANN401
+    """Retrieve parsed OIDC data and access token from request headers.
+
+    Authentication and authorization is handled by an Application Load Balancer (ALB).
+    After the ALB authenticates a user successfully, it sends user claims received
+    from the IdP (Okta) to the target (this app), along with an access token.
+    The access token is provided in plain text and the user claims (OIDC data)
+    in JSON web tokens (JWT) format. This method will parse OIDC data
+    from the encoded user claims JWT.
+
+    For more details, see:
+    https://docs.aws.amazon.com/elasticloadbalancing/latest/application/listener-authenticate-users.html
+    """
+    # parse JWT headers
+    jwt_headers_str = encoded_jwt.split(".")[0]
+    decoded_jwt_headers_json = base64.b64decode(jwt_headers_str).decode()
+    jwt_headers = json.loads(decoded_jwt_headers_json)
+
+    # get the key id from headers
+    key_id = jwt_headers["kid"]
+
+    # get the public key from regional endpoint
+    url = (
+        "https://public-keys.auth.elb."
+        + Config().AWS_DEFAULT_REGION
+        + ".amazonaws.com/"
+        + key_id
+    )
+    pub_key = requests.get(url, timeout=60).text
+
+    # decode payload
+    return jwt.decode(
+        encoded_jwt,
+        pub_key,
+        algorithms=["ES256"],
+        verify=verify,
+        options=options,
+    )
 
 
 def get_task_status_and_logs(task_id: str) -> tuple[str, list]:

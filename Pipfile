@@ -8,6 +8,9 @@ apig-wsgi = "*"
 attrs = "*"
 boto3 = "*"
 Flask = "*"
+flask_login = "*"
+requests = "*"
+pyjwt = {extras = ["crypto"], version = "*"}
 sentry-sdk = "*"
 
 [dev-packages]
@@ -20,6 +23,7 @@ pandas = "*"
 pre-commit = "*"
 pytest = "*"
 ruff = "*"
+types-requests = "*"
 
 [requires]
 python_version = "3.12"
