@@ -21,6 +21,8 @@ from webapp.utils.aws import ECSClient
 
 logger = logging.getLogger(__name__)
 
+CONFIG = Config()
+
 
 class User(UserMixin):
     """Class representing users of the app.
@@ -51,7 +53,7 @@ class User(UserMixin):
 
 def create_app() -> Flask:
     app = Flask(__name__)
-    app.secret_key = Config().SECRET_KEY
+    app.config.update(LOGIN_DISABLED=CONFIG.LOGIN_DISABLED, SECRET_KEY=CONFIG.SECRET_KEY)
 
     login_manager = LoginManager()
     login_manager.init_app(app)

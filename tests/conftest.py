@@ -37,6 +37,7 @@ def _test_env(monkeypatch):
     monkeypatch.setenv(
         "ALMA_SAP_INVOICES_CLOUDWATCH_LOG_GROUP", "mock-sapinvoices-ecs-test"
     )
+    monkeypatch.setenv("LOGIN_DISABLED", "false")
     monkeypatch.setenv("SECRET_KEY", "itsasecret")
     monkeypatch.setenv("SENTRY_DSN", "https://1234567890@00000.ingest.sentry.io/123456")
     monkeypatch.setenv("WORKSPACE", "test")
