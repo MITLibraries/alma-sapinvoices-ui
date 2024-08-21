@@ -1,6 +1,7 @@
 # ruff: noqa: E501, PT004
 import json
 from datetime import timedelta
+from unittest import mock
 from unittest.mock import patch
 
 import boto3
@@ -12,6 +13,7 @@ from moto.core.utils import unix_time_millis, utcnow
 from moto.moto_api import state_manager
 
 from webapp import Config, create_app
+from webapp.app import User
 from webapp.utils.aws import CloudWatchLogsClient, ECSClient
 
 AWS_DEFAULT_REGION = "us-east-1"
@@ -35,8 +37,10 @@ def _test_env(monkeypatch):
     monkeypatch.setenv(
         "ALMA_SAP_INVOICES_CLOUDWATCH_LOG_GROUP", "mock-sapinvoices-ecs-test"
     )
-    monkeypatch.setenv("WORKSPACE", "test")
+    monkeypatch.setenv("LOGIN_DISABLED", "false")
+    monkeypatch.setenv("SECRET_KEY", "itsasecret")
     monkeypatch.setenv("SENTRY_DSN", "https://1234567890@00000.ingest.sentry.io/123456")
+    monkeypatch.setenv("WORKSPACE", "test")
     monkeypatch.setenv("AWS_DEFAULT_REGION", "us-east-1")
 
 
@@ -51,8 +55,29 @@ def sapinvoices_app(config):
 
 
 @pytest.fixture
-def sapinvoices_client(sapinvoices_app):
+def sapinvoices_client(sapinvoices_app, authenticated_user):
     return sapinvoices_app.test_client()
+
+
+@pytest.fixture
+def authenticated_user():
+    return User(mit_id="123", name="Authenticated User", email="auser@mit.edu")
+
+
+@pytest.fixture
+def mock_parse_oidc_data():
+    with mock.patch("webapp.app.parse_oidc_data") as mock_parse_oidc_data:
+        mock_parse_oidc_data.return_value = {
+            "mit_id": "123",
+            "name": "Authenticated User",
+            "preferred_username": "auser@mit.edu",
+        }
+        yield mock_parse_oidc_data
+
+
+@pytest.fixture
+def mock_request_headers_oidc_data():
+    return {"x-amzn-oidc-accesstoken": "abc", "x-amzn-oidc-data": "abc"}
 
 
 @pytest.fixture
@@ -280,7 +305,7 @@ def lambda_function_event_payload():
         "routeKey": "$default",
         "rawPath": "/",
         "rawQueryString": "",
-        "headers": {"header1": "value1", "header2": "value1,value2"},
+        "headers": {"x-amzn-oidc-accesstoken": "abc123", "x-amzn-oidc-data": "abc123"},
         "requestContext": {
             "accountId": "123456789012",
             "apiId": "api-id",

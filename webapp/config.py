@@ -21,9 +21,11 @@ class Config:
         "ALMA_SAP_INVOICES_ECS_TASK_DEFINITION",
         "ALMA_SAP_INVOICES_ECS_NETWORK_CONFIG",
         "ALMA_SAP_INVOICES_CLOUDWATCH_LOG_GROUP",
+        "LOGIN_DISABLED",
+        "SECRET_KEY",
         "WORKSPACE",
     )
-    OPTIONAL_ENV_VARS = ()
+    OPTIONAL_ENV_VARS = ("AWS_DEFAULT_REGION",)
 
     def __getattr__(self, name: str) -> Any:
         """Method to raise exception if required env vars not set."""
@@ -63,6 +65,22 @@ class Config:
     @property
     def ALMA_SAP_INVOICES_CLOUDWATCH_LOG_GROUP(self) -> str:
         return self._getenv("ALMA_SAP_INVOICES_CLOUDWATCH_LOG_GROUP")
+
+    @property
+    def AWS_DEFAULT_REGION(self) -> str:
+        if region_name := self._getenv("AWS_DEFAULT_REGION"):
+            return region_name
+        return "us-east-1"
+
+    @property
+    def LOGIN_DISABLED(self) -> bool:
+        if self._getenv("LOGIN_DISABLED").lower() == "true":  # noqa: SIM103
+            return True
+        return False
+
+    @property
+    def SECRET_KEY(self) -> str:
+        return self._getenv("SECRET_KEY")
 
     @property
     def SENTRY_DSN(self) -> str:
