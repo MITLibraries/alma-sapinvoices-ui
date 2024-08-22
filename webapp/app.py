@@ -3,7 +3,15 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
-from flask import Flask, Request, jsonify, redirect, render_template, session, url_for
+from flask import (
+    Flask,
+    Request,
+    jsonify,
+    redirect,
+    render_template,
+    session,
+    url_for,
+)
 from flask_login import (
     LoginManager,
     UserMixin,
@@ -16,7 +24,7 @@ if TYPE_CHECKING:
 
 from webapp.config import Config
 from webapp.exceptions import ECSTaskLogStreamDoesNotExistError
-from webapp.utils import get_task_status_and_logs, parse_oidc_data
+from webapp.utils import get_task_status_and_logs, log_activity, parse_oidc_data
 from webapp.utils.aws import ECSClient
 
 logger = logging.getLogger(__name__)
@@ -126,11 +134,13 @@ def create_app() -> Flask:
         elif run_type == "final":
             task_arn = ecs_client.execute_final_run()
         task_id = task_arn.split("/")[-1]  # type: ignore[union-attr]
+        log_activity(f"executed a '{run_type}' run (task ID = '{task_id}').")
         return redirect(url_for("process_invoices_status", task_id=task_id))
 
     @app.route("/process-invoices/status/<task_id>")
     @login_required
     def process_invoices_status(task_id: str) -> str:
+        log_activity(f"checked the status for task '{task_id}'.")
         try:
             _, logs = get_task_status_and_logs(task_id)
         except ECSTaskLogStreamDoesNotExistError as exception:
@@ -167,6 +177,7 @@ def create_app() -> Flask:
 
         Note: This doesn't log the user out of ALB or Touchstone.
         """
+        log_activity("logged out.")
         # clear parsed OIDC data from the session
         session.pop("oidc_access_token", None)
         session.pop("user", None)

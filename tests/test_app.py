@@ -1,4 +1,5 @@
 from http import HTTPStatus
+from unittest import mock
 
 from flask import session
 from flask_login import current_user
@@ -11,6 +12,7 @@ def test_app_request_index_success(
 ):
     response = sapinvoices_client.get("/", headers=mock_request_headers_oidc_data)
     assert response.status_code == HTTPStatus.OK
+    assert "Welcome, Authenticated User!" in response.text
 
 
 def test_app_request_index_unauthorized_error(sapinvoices_client):
@@ -61,3 +63,41 @@ def test_app_user_from_session_data_returns_none_if_missing_oidc_data(
         session.pop("oidc_data")
 
         assert User.from_session_data() is None
+
+
+def test_app_log_activity_executed_runs_success(
+    sapinvoices_client,
+    ecs_client,
+    mock_parse_oidc_data,
+    mock_request_headers_oidc_data,
+    caplog,
+):
+    with sapinvoices_client, mock.patch(
+        "webapp.app.ECSClient.execute_review_run"
+    ) as mock_ecsclient_review_run:
+        mock_ecsclient_review_run.return_value = "abc123"
+        sapinvoices_client.get(
+            "/process-invoices/run/review", headers=mock_request_headers_oidc_data
+        )
+        assert (
+            "Authenticated User executed a 'review' run (task ID = 'abc123')."
+            in caplog.text
+        )
+
+
+def test_app_log_activity_checked_task_status_success(
+    sapinvoices_client, mock_parse_oidc_data, mock_request_headers_oidc_data, caplog
+):
+    with sapinvoices_client:
+        sapinvoices_client.get(
+            "/process-invoices/status/abc123", headers=mock_request_headers_oidc_data
+        )
+        assert "Authenticated User checked the status for task 'abc123'." in caplog.text
+
+
+def test_app_log_activity_logged_out_success(
+    sapinvoices_client, mock_parse_oidc_data, mock_request_headers_oidc_data, caplog
+):
+    with sapinvoices_client:
+        sapinvoices_client.get("/logout", headers=mock_request_headers_oidc_data)
+        assert "Authenticated User logged out." in caplog.text
