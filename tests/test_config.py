@@ -2,7 +2,9 @@ import logging
 
 import pytest
 
-from webapp.exceptions import InvalidNetworkConfigurationError
+
+def test_config_check_required_env_vars_success(config):
+    config.check_required_env_vars()
 
 
 def test_config_check_required_env_vars_error(monkeypatch, config):
@@ -50,16 +52,11 @@ def test_config_env_access_error(config):
         _ = config.DOES_NOT_EXIST
 
 
-def test_config_env_access_raise_error_if_network_config_not_json(monkeypatch, config):
-    monkeypatch.setenv("ALMA_SAP_INVOICES_ECS_NETWORK_CONFIG", "test")
-    with pytest.raises(InvalidNetworkConfigurationError, match="Expecting value"):
-        _ = config.ALMA_SAP_INVOICES_ECS_NETWORK_CONFIG
-
-
-def test_config_env_access_raise_error_if_network_config_is_missing(monkeypatch, config):
-    monkeypatch.delenv("ALMA_SAP_INVOICES_ECS_NETWORK_CONFIG")
-    with pytest.raises(
-        InvalidNetworkConfigurationError,
-        match="the JSON object must be str, bytes or bytearray, not NoneType",
-    ):
-        _ = config.ALMA_SAP_INVOICES_ECS_NETWORK_CONFIG
+def test_config_env_access_network_config_success(monkeypatch, config):
+    assert config.ALMA_SAP_INVOICES_ECS_NETWORK_CONFIG == {
+        "awsvpcConfiguration": {
+            "subnets": ["subnet-abc123", "subnet-def456"],
+            "securityGroups": ["sg-abc123"],
+            "assignPublicIp": "DISABLED",
+        }
+    }

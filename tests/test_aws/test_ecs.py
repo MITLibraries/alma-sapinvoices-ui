@@ -1,5 +1,4 @@
 # ruff: noqa: E501
-import json
 import os
 
 import pytest
@@ -17,9 +16,13 @@ def test_ecs_client_init_success(ecs_client):
     assert (
         ecs_client.task_definition == os.environ["ALMA_SAP_INVOICES_ECS_TASK_DEFINITION"]
     )
-    assert ecs_client.network_configuration == json.loads(
-        os.environ["ALMA_SAP_INVOICES_ECS_NETWORK_CONFIG"]
-    )
+    assert ecs_client.network_configuration == {
+        "awsvpcConfiguration": {
+            "subnets": ["subnet-abc123", "subnet-def456"],
+            "securityGroups": ["sg-abc123"],
+            "assignPublicIp": "DISABLED",
+        }
+    }
     assert ecs_client.container == os.environ["ALMA_SAP_INVOICES_ECR_IMAGE_NAME"]
 
 

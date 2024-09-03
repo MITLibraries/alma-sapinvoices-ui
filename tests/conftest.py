@@ -26,13 +26,11 @@ def _test_env(monkeypatch):
         "ALMA_SAP_INVOICES_ECS_CLUSTER",
         f"arn:aws:ecs:us-east-1:{ACCOUNT_ID}:cluster/mock-sapinvoices-ecs-test",
     )
+    monkeypatch.setenv("ALMA_SAP_INVOICES_ECS_GROUPS", "sg-abc123")
+    monkeypatch.setenv("ALMA_SAP_INVOICES_ECS_SUBNETS", "subnet-abc123,subnet-def456")
     monkeypatch.setenv(
         "ALMA_SAP_INVOICES_ECS_TASK_DEFINITION",
         f"arn:aws:ecs:us-east-1:{ACCOUNT_ID}:task-definition/mock-sapinvoices-ecs-test:1",
-    )
-    monkeypatch.setenv(
-        "ALMA_SAP_INVOICES_ECS_NETWORK_CONFIG",
-        '{"awsvpcConfiguration": {"securityGroups": ["sg-abc123"], "subnets": ["subnet-abc123"]}}',
     )
     monkeypatch.setenv(
         "ALMA_SAP_INVOICES_CLOUDWATCH_LOG_GROUP", "mock-sapinvoices-ecs-test"

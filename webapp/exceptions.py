@@ -1,7 +1,3 @@
-class InvalidNetworkConfigurationError(Exception):
-    """Exception to raise when ALMA_SAP_INVOICES_ECS_NETWORK_CONFIG is invalid."""
-
-
 class ECSTaskLogStreamDoesNotExistError(Exception):
     """Exception to raise when a log stream is not found."""
 
