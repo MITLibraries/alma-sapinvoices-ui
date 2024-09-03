@@ -52,12 +52,13 @@ def get_task_status_and_logs(task_id: str) -> tuple[str, list]:
             else status
         )
     except ECSTaskDoesNotExistError:
-        task_status = "COMPLETED"
+        task_status = "UNKNOWN"
 
-    # If logs cannot be found, task did not exist
-    logs = ["Waiting for logs."]
-    if task_status == "COMPLETED":
+    logs = ["Loading."]
+    if task_status in ["COMPLETED", "UNKNOWN"]:
         logs = cloudwatchlogs_client.get_log_messages(task_id)
+        if not logs:
+            return "EXPIRED (UNKNOWN)", ["Log stream expired, cannot find logs for task."]
 
     return task_status, logs
 

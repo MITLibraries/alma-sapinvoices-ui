@@ -6,9 +6,11 @@ from typing import TYPE_CHECKING
 from flask import (
     Flask,
     Request,
+    abort,
     jsonify,
     redirect,
     render_template,
+    request,
     session,
     url_for,
 )
@@ -123,16 +125,41 @@ def create_app() -> Flask:
     @app.route("/process-invoices/run/<run_type>")
     @login_required
     def process_invoices_run(run_type: str) -> str | Response:
+        if run_type == "review":
+            # [TODO] Add error page for invalid run types.
+            return redirect(url_for("process_invoices_run_execute", run_type=run_type))
+        elif run_type == "final":  # noqa: RET505
+            return redirect(url_for("process_invoices_confirm_final_run"))
+        return abort(400, description=f"Invalid run type: '{run_type}'")
+
+    @app.route("/process-invoices/run/final/confirm")
+    @login_required
+    def process_invoices_confirm_final_run() -> str:
+        return render_template("process_invoices_confirm_final_run.html")
+
+    @app.route("/process-invoices/run/<run_type>/execute")
+    @login_required
+    def process_invoices_run_execute(run_type: str) -> str | Response:
         ecs_client = ECSClient()
         if active_tasks := ecs_client.get_active_tasks():
             return render_template(
                 "errors/error_400_cannot_run_multiple_tasks.html",
                 active_tasks=active_tasks,
             )
+
         if run_type == "review":
             task_arn = ecs_client.execute_review_run()
         elif run_type == "final":
-            task_arn = ecs_client.execute_final_run()
+            if request.referrer and request.referrer.endswith(
+                "process-invoices/run/final/confirm"
+            ):
+                task_arn = ecs_client.execute_final_run()
+            else:
+                return abort(
+                    400, description="Unable to confirm execution of 'final' run."
+                )
+        else:
+            return abort(400, description=f"Invalid run type: '{run_type}'")
         task_id = task_arn.split("/")[-1]  # type: ignore[union-attr]
         log_activity(f"executed a '{run_type}' run (task ID = '{task_id}').")
         return redirect(url_for("process_invoices_status", task_id=task_id))

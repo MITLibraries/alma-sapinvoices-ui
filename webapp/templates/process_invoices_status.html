@@ -16,13 +16,13 @@
   <hr>
   <div>
     <h2>Run status</h2>
-    <p>Status: <span id="status">UNKNOWN</span></p>
+    <p>Status: <span id="status">Loading.</span></p>
   </div>
   <hr>
   <div>
-    <h2>Run logs</h2>
+    <h2>Run details</h2>
     <pre class="box-content">
-      <code id="logs">Logs will be displayed here.</code>
+      <code id="logs">Loading.</code>
     </pre>
   </div>
 {% endblock content %}
@@ -34,11 +34,11 @@
   var status_element = document.getElementById("status");
   var interval = setInterval(function () {
     fetch_monitor_data()
-    if (status_element.textContent === "COMPLETED"){
+    if (status_element.textContent === "COMPLETED" || status_element.textContent === "EXPIRED (UNKNOWN)"){
       clearInterval(interval);
       return;
     }
-  }, 2000);
+  }, 5000);
   // Fetch JSON data
   function fetch_monitor_data() {
     fetch(url)
