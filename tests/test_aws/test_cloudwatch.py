@@ -42,29 +42,3 @@ def test_cloudwatchlogs_client_get_log_events_raise_error(
         match="No log streams found for task id 'DOES_NOT_EXIST'.",
     ):
         assert cloudwatchlogs_client.get_log_events(task_id="DOES_NOT_EXIST")
-
-
-def test_cloudwatchlogs_client_log_stream_exists_returns_true(
-    cloudwatchlogs_client,
-    mock_cloudwatchlogs_log_stream_review_run_task,
-):
-    # Note: Either 'review run' or 'final run' (task_id="abc002") mocked log stream
-    #       fixture will work for this test.
-    assert cloudwatchlogs_client.log_stream_exists(task_id="abc001") is True
-
-
-def test_cloudwatchlogs_client_log_stream_exists_returns_false(
-    cloudwatchlogs_client, mock_cloudwatchlogs_log_group
-):
-    assert cloudwatchlogs_client.log_stream_exists(task_id="DOES_NOT_EXIST") is False
-
-
-def test_cloudwatchlogs_client_get_log_streams_success(
-    cloudwatchlogs_client,
-    mock_cloudwatchlogs_log_stream_review_run_task,
-    mock_cloudwatchlogs_log_stream_final_run_task,
-):
-    assert cloudwatchlogs_client.get_log_streams() == [
-        "sapinvoices/mock-sapinvoices-ecs-test/abc001",
-        "sapinvoices/mock-sapinvoices-ecs-test/abc002",
-    ]

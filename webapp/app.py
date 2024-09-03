@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import time
 from typing import TYPE_CHECKING
 
 from flask import (
@@ -126,7 +127,6 @@ def create_app() -> Flask:
     @login_required
     def process_invoices_run(run_type: str) -> str | Response:
         if run_type == "review":
-            # [TODO] Add error page for invalid run types.
             return redirect(url_for("process_invoices_run_execute", run_type=run_type))
         elif run_type == "final":  # noqa: RET505
             return redirect(url_for("process_invoices_confirm_final_run"))
@@ -184,12 +184,13 @@ def create_app() -> Flask:
     @app.route("/process-invoices/status/<task_id>/data")
     @login_required
     def process_invoices_status_data(task_id: str) -> Response:
+        t_0 = time.time()
         try:
             task_status, logs = get_task_status_and_logs(task_id)
         except ECSTaskLogStreamDoesNotExistError:
             task_status = "UNKNOWN"
             logs = ["Log stream does not exist."]
-
+        logger.info(f"Data route elapsed: {time.time()-t_0}")
         return jsonify({"status": task_status, "logs": logs})
 
     @app.route("/logout")

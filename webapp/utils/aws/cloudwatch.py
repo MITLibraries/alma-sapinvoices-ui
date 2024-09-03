@@ -51,38 +51,17 @@ class CloudWatchLogsClient:
             "startFromHead": True,
         }
 
-        if self.log_stream_exists(task_id):
-            while True:
-                response = self.client.get_log_events(**params)  # type: ignore[arg-type]
-                log_events.extend(response["events"])
-                next_token = response.get("nextForwardToken")
-                if next_token == params.get("nextToken"):
-                    # the end of the stream is marked by returning the same token
-                    break
-                params["nextToken"] = next_token
-            logger.info("CloudWatch logs retrieved.")
-            return log_events
-        raise ECSTaskLogStreamDoesNotExistError(task_id)
-
-    def log_stream_exists(self, task_id: str) -> bool:
-        return any(
-            task_id == log_stream_name.split("/")[-1]
-            for log_stream_name in self.get_log_streams()
-        )
-
-    def get_log_streams(self) -> list[str]:
-        log_streams: list[str] = []
-        params = {
-            "logGroupName": self.log_group_name,
-        }
         while True:
-            response = self.client.describe_log_streams(**params)  # type: ignore[arg-type]
-            log_streams.extend(
-                logstream["logStreamName"] for logstream in response["logStreams"]
-            )
-            next_token = response.get("nextToken")
-            if next_token is None:
-                # all log streams retrieved is "nextToken" excluded from response
+            try:
+                response = self.client.get_log_events(**params)  # type: ignore[arg-type]
+            except self.client.exceptions.ResourceNotFoundException as error:
+                raise ECSTaskLogStreamDoesNotExistError(task_id) from error
+            log_events.extend(response["events"])
+            next_token = response.get("nextForwardToken")
+            if next_token == params.get("nextToken"):
+                # the end of the stream is marked by returning the same token
                 break
             params["nextToken"] = next_token
-        return log_streams
+
+        logger.info("CloudWatch logs retrieved.")
+        return log_events
