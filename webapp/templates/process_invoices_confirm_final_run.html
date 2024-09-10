@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block title %}Confirm final run{% endblock title %}
+
+{% block header %}
+{% endblock header %}
+
+{% block content %}
+<h1>Confirm final run</h1>
+<h3>Are you sure you want to execute a <em>final</em> run?</h2>
+
+<p>
+    <a class="btn button-primary" href="{{ url_for('process_invoices') }}">No</a>
+    <a class="btn button-primary warn" href="{{ url_for('process_invoices_run_execute', run_type='final') }}">
+        Execute a <strong>final</strong> run
+    </a>
+</p>
+
+{% endblock content %}

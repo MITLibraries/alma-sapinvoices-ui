@@ -34,13 +34,21 @@ def get_task_status_and_logs(task_id: str) -> tuple[str, list]:
        - If the ECS task exists, the status for the task is retrieved.
          When task_status = "STOPPED" the ECS task is considered "COMPLETED"
          (the task run completed).
-       - If the ECS task does not exist, proceed.
+       - If the ECS task does not exist, set task_status = "UNKNOWN" and
+         proceed.
 
     2. Get the logs for the task.
-       - Whether or not the ECS task exists, retrieve the logs when
-         task_status = "COMPLETED". This ensures full set of logs are retrieved
-         only when the task run completed. If logs are not found,
-         raise ECSTaskLogStreamDoesNotExistError.
+       - The log message defaults to "Loading." Requests to CloudWatch are only
+         made when the task_status = "UNKNOWN" or "COMPLETED".
+       - If task_status = "UNKNOWN", method will look for the task's log stream.
+          - If the log stream exists and is not expired, the method will return
+            a tuple with task_status = "COMPLETED" and the logs.
+          - If the log stream exists but is expired, the method will return a
+            tuple with task_status = "EXPIRED (UNKNOWN)" and a corresponding message.
+       - If task_status = "COMPLETED", retrieve logs. This ensures the full set of logs
+         are retrieved only when the task run completed.
+       - If the log stream does not exist, CloudWatchLogsClient.get_log_messages
+         raises ECSTaskLogStreamDoesNotExistError.
     """
     ecs_client = ECSClient()
     cloudwatchlogs_client = CloudWatchLogsClient()
@@ -52,10 +60,22 @@ def get_task_status_and_logs(task_id: str) -> tuple[str, list]:
             else status
         )
     except ECSTaskDoesNotExistError:
-        task_status = "COMPLETED"
+        task_status = "UNKNOWN"
 
-    # If logs cannot be found, task did not exist
-    logs = ["Waiting for logs."]
+    # Default log message
+    logs = ["Loading."]
+
+    # ECS tasks with "UNKNOWN" status are old ECS task runs
+    # If logs exist, set status as "COMPLETED" and return log messages
+    # If logs do not exist, set status as "EXPIRED (UNKNOWN)" and
+    #   return message saying log stream has expired.
+    if task_status == "UNKNOWN":
+        logs = cloudwatchlogs_client.get_log_messages(task_id)
+        if logs:
+            return "COMPLETED", logs
+        return "EXPIRED (UNKNOWN)", ["Log stream expired, cannot find logs for task."]
+
+    # ECS tasks with "COMPLETED" status are recent ECS task runs
     if task_status == "COMPLETED":
         logs = cloudwatchlogs_client.get_log_messages(task_id)
 

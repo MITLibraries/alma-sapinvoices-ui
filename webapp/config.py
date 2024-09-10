@@ -1,29 +1,27 @@
 # ruff: noqa:ANN401,  N802
 
-import json
 import logging
 import os
-from json import JSONDecodeError
 from typing import Any
 
 import sentry_sdk
 from sentry_sdk.integrations.aws_lambda import AwsLambdaIntegration
-
-from webapp.exceptions import InvalidNetworkConfigurationError
 
 logger = logging.getLogger("__name__")
 
 
 class Config:
     REQUIRED_ENV_VARS = (
+        "ALMA_SAP_INVOICES_CLOUDWATCH_LOG_GROUP",
         "ALMA_SAP_INVOICES_ECR_IMAGE_NAME",
         "ALMA_SAP_INVOICES_ECS_CLUSTER",
+        "ALMA_SAP_INVOICES_ECS_GROUPS",
+        "ALMA_SAP_INVOICES_ECS_SUBNETS",
         "ALMA_SAP_INVOICES_ECS_TASK_DEFINITION",
-        "ALMA_SAP_INVOICES_ECS_NETWORK_CONFIG",
-        "ALMA_SAP_INVOICES_CLOUDWATCH_LOG_GROUP",
         "LOGIN_DISABLED",
         "SECRET_KEY",
         "WORKSPACE",
+        "SENTRY_DSN",
     )
     OPTIONAL_ENV_VARS = ("AWS_DEFAULT_REGION",)
 
@@ -34,61 +32,28 @@ class Config:
         message = f"'{name}' not a valid configuration variable"
         raise AttributeError(message)
 
-    def _getenv(self, name: str) -> Any:
-        if value := os.getenv(name):
-            return value
-        if name in self.REQUIRED_ENV_VARS:
-            message = f"'{name}' is a required environment variable."
-            raise AttributeError(message)
-        return None
-
     @property
     def ALMA_SAP_INVOICES_ECS_NETWORK_CONFIG(self) -> dict:
-        network_config = os.getenv("ALMA_SAP_INVOICES_ECS_NETWORK_CONFIG")
-        try:
-            return json.loads(network_config)  # type: ignore[arg-type]
-        except (TypeError, JSONDecodeError) as error:
-            raise InvalidNetworkConfigurationError(error) from error
-
-    @property
-    def ALMA_SAP_INVOICES_ECR_IMAGE_NAME(self) -> str:
-        return self._getenv("ALMA_SAP_INVOICES_ECR_IMAGE_NAME")
-
-    @property
-    def ALMA_SAP_INVOICES_ECS_CLUSTER(self) -> str:
-        return self._getenv("ALMA_SAP_INVOICES_ECS_CLUSTER")
-
-    @property
-    def ALMA_SAP_INVOICES_ECS_TASK_DEFINITION(self) -> str:
-        return self._getenv("ALMA_SAP_INVOICES_ECS_TASK_DEFINITION")
-
-    @property
-    def ALMA_SAP_INVOICES_CLOUDWATCH_LOG_GROUP(self) -> str:
-        return self._getenv("ALMA_SAP_INVOICES_CLOUDWATCH_LOG_GROUP")
+        security_groups = self.ALMA_SAP_INVOICES_ECS_GROUPS
+        subnets = self.ALMA_SAP_INVOICES_ECS_SUBNETS
+        return {
+            "awsvpcConfiguration": {
+                "subnets": subnets.split(","),
+                "securityGroups": security_groups.split(","),
+                "assignPublicIp": "DISABLED",
+            }
+        }
 
     @property
     def AWS_DEFAULT_REGION(self) -> str:
-        if region_name := self._getenv("AWS_DEFAULT_REGION"):
-            return region_name
-        return "us-east-1"
+        return os.getenv("AWS_DEFAULT_REGION", "us-east-1")
 
     @property
     def LOGIN_DISABLED(self) -> bool:
-        if self._getenv("LOGIN_DISABLED").lower() == "true":  # noqa: SIM103
-            return True
+        if login_disabled := os.getenv("LOGIN_DISABLED"):  # noqa: SIM102
+            if login_disabled.lower() == "true":
+                return True
         return False
-
-    @property
-    def SECRET_KEY(self) -> str:
-        return self._getenv("SECRET_KEY")
-
-    @property
-    def SENTRY_DSN(self) -> str:
-        return self._getenv("SENTRY_DSN")
-
-    @property
-    def WORKSPACE(self) -> str:
-        return self._getenv("WORKSPACE")
 
     def check_required_env_vars(self) -> None:
         """Method to raise exception if required env vars not set."""

@@ -77,7 +77,7 @@ def test_app_log_activity_executed_runs_success(
     ) as mock_ecsclient_review_run:
         mock_ecsclient_review_run.return_value = "abc123"
         sapinvoices_client.get(
-            "/process-invoices/run/review", headers=mock_request_headers_oidc_data
+            "/process-invoices/run/review/execute", headers=mock_request_headers_oidc_data
         )
         assert (
             "Authenticated User executed a 'review' run (task ID = 'abc123')."
