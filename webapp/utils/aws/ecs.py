@@ -46,11 +46,13 @@ class ECSClient:
 
     def execute_review_run(self) -> str | None:
         logger.info("Executing ECS task for 'Review Run'")
-        return self.run(run_type="review", commands=["--blah"])
+        return self.run(run_type="review", commands=["process-invoices", "--real-run"])
 
     def execute_final_run(self) -> str | None:
         logger.info("Executing ECS task for 'Final Run'")
-        return self.run(run_type="final", commands=["--blah", "--bloop"])
+        return self.run(
+            run_type="final", commands=["process-invoices", "--real-run", "--final-run"]
+        )
 
     def run(
         self, run_type: Literal["review", "final"], commands: list | None = None
