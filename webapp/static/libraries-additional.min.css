@@ -1,3 +1,7 @@
+.box-content {
+    display: inline-block;
+}
+
 .platform-name {
     color: #fff;
     font-size: clamp(1rem,5vw,2.8rem);

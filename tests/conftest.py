@@ -12,8 +12,9 @@ from moto.core import DEFAULT_ACCOUNT_ID as ACCOUNT_ID
 from moto.core.utils import unix_time_millis, utcnow
 from moto.moto_api import state_manager
 
-from webapp import Config, create_app
+from webapp import create_app
 from webapp.app import User
+from webapp.config import Config
 from webapp.utils.aws import CloudWatchLogsClient, ECSClient
 
 AWS_DEFAULT_REGION = "us-east-1"

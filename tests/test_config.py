@@ -2,6 +2,8 @@ import logging
 
 import pytest
 
+from webapp.config import configure_logger, configure_sentry
+
 
 def test_config_check_required_env_vars_success(config):
     config.check_required_env_vars()
@@ -15,30 +17,32 @@ def test_config_check_required_env_vars_error(monkeypatch, config):
 
 def test_configure_logger_not_verbose(config, caplog):
     logger = logging.getLogger(__name__)
-    result = config.configure_logger(verbose=False)
+    result = configure_logger(verbose=False)
     assert logger.getEffectiveLevel() == logging.INFO
     assert result == "Logger 'root' configured with level=INFO"
 
 
 def test_configure_logger_verbose(config, caplog):
     logger = logging.getLogger(__name__)
-    result = config.configure_logger(verbose=True)
+    result = configure_logger(verbose=True)
     assert logger.getEffectiveLevel() == logging.DEBUG
     assert result == "Logger 'root' configured with level=DEBUG"
 
 
 def test_configure_sentry_if_dsn_exists(config, caplog, monkeypatch):
     monkeypatch.setenv("SENTRY_DSN", "https://1234567890@00000.ingest.sentry.io/123456")
-    config.configure_sentry()
+
     assert (
-        "Sentry DSN found, exceptions will be sent to Sentry with env=test" in caplog.text
+        configure_sentry()
+        == "Sentry DSN found, exceptions will be sent to Sentry with env=test"
     )
 
 
 def test_configure_sentry_if_dsn_missing(config, caplog, monkeypatch):
     monkeypatch.delenv("SENTRY_DSN", raising=False)
-    config.configure_sentry()
-    assert "No Sentry DSN found, exceptions will not be sent to Sentry" in caplog.text
+    assert (
+        configure_sentry() == "No Sentry DSN found, exceptions will not be sent to Sentry"
+    )
 
 
 def test_config_env_access_success(config):

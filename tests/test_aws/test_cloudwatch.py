@@ -16,10 +16,13 @@ def test_cloudwatchlogs_client_get_log_messages_review_run_success(
     cloudwatch_sapinvoices_review_run_logs,
     mock_cloudwatchlogs_log_stream_review_run_task,
 ):
-    assert (
-        cloudwatchlogs_client.get_log_messages(task_id="abc001")
-        == cloudwatch_sapinvoices_review_run_logs
-    )
+    assert cloudwatchlogs_client.get_log_messages(task_id="abc001") == [
+        "INFO sapinvoices.cli.process_invoices(): SAP invoice process completed for a review run",  # noqa: E501
+        "3 monograph invoices retrieved and processed:",
+        "2 SAP monograph invoices",
+        "1 other payment monograph invoices",
+        "2 serial invoices retrieved and processed",
+    ]
 
 
 def test_cloudwatchlogs_client_get_log_messages_final_run_success(
@@ -27,10 +30,13 @@ def test_cloudwatchlogs_client_get_log_messages_final_run_success(
     cloudwatch_sapinvoices_final_run_logs,
     mock_cloudwatchlogs_log_stream_final_run_task,
 ):
-    assert (
-        cloudwatchlogs_client.get_log_messages(task_id="abc002")
-        == cloudwatch_sapinvoices_final_run_logs
-    )
+    assert cloudwatchlogs_client.get_log_messages(task_id="abc002") == [
+        "INFO sapinvoices.cli.process_invoices(): SAP invoice process completed for a final run",  # noqa: E501
+        "3 monograph invoices retrieved and processed:",
+        "2 SAP monograph invoices",
+        "1 other payment monograph invoices",
+        "2 serial invoices retrieved and processed",
+    ]
 
 
 def test_cloudwatchlogs_client_get_log_events_raise_error(
