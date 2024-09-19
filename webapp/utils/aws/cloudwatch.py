@@ -39,8 +39,28 @@ class CloudWatchLogsClient:
     def get_log_messages(self, task_id: str) -> list:
         messages: list = []
         if logs := self.get_log_events(task_id):
-            messages.extend(event["message"] for event in logs)
+            return self.get_log_summary(logs)
         return messages
+
+    def get_log_summary(self, logs: list[dict]) -> list[str]:
+        """Get summary of SAP invoice processing logs.
+
+        This function will first determine the index of the log event
+        the marks the start of the "summary" log messages that
+        describe the output of the SAP invoice processing run.
+        The function will then retrieve all the messages starting from
+        that index, effectively retrieving a summary of the run.
+        """
+        summary_index: int | None = None
+        for index, event in enumerate(logs):
+            message = event["message"]
+            if (
+                "SAP invoice process completed" in message
+                or "No invoices waiting to be sent in Alma" in message
+            ):
+                summary_index = index
+                return [event["message"] for event in logs[summary_index:]]
+        return ["SAP invoice process did not complete."]
 
     def get_log_events(self, task_id: str) -> list:
         logger.info("Retrieving CloudWatch logs for task.")
