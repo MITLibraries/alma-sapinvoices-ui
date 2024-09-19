@@ -3,7 +3,8 @@ import logging
 
 from apig_wsgi import make_lambda_handler
 
-from webapp import Config, create_app
+from webapp import create_app
+from webapp.config import Config, configure_logger, configure_sentry
 
 logger = logging.getLogger(__name__)
 CONFIG = Config()
@@ -21,8 +22,8 @@ def lambda_handler(event: dict, context: dict) -> dict:
     See https://github.com/adamchainz/apig-wsgi/tree/main.
     """
     CONFIG.check_required_env_vars()
-    CONFIG.configure_logger(verbose=True)
-    CONFIG.configure_sentry()
+    logger.info(configure_logger(verbose=True))
+    logger.info(configure_sentry())
 
     apig_wsgi_handler = make_lambda_handler(create_app())
 

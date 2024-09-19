@@ -5,7 +5,6 @@ import os
 from typing import Any
 
 import sentry_sdk
-from sentry_sdk.integrations.aws_lambda import AwsLambdaIntegration
 
 logger = logging.getLogger("__name__")
 
@@ -62,41 +61,37 @@ class Config:
             message = f"Missing required environment variables: {', '.join(missing_vars)}"
             raise OSError(message)
 
-    def configure_logger(self, *, verbose: bool) -> str:
-        logger = logging.getLogger()
-        if verbose:
-            logging.basicConfig(
-                format=(
-                    "%(asctime)s %(levelname)s %(name)s.%(funcName)s() "
-                    "line %(lineno)d: "
-                    "%(message)s"
-                )
-            )
-            logger.setLevel(logging.DEBUG)
-        else:
-            logging.basicConfig(
-                format="%(asctime)s %(levelname)s %(name)s.%(funcName)s(): %(message)s"
-            )
-            logger.setLevel(logging.INFO)
 
-        return (
-            f"Logger '{logger.name}' configured with level="
-            f"{logging.getLevelName(logger.getEffectiveLevel())}"
+def configure_logger(*, verbose: bool) -> str:
+    logger = logging.getLogger()
+    if verbose:
+        logging.basicConfig(
+            format=(
+                "%(asctime)s %(levelname)s %(name)s.%(funcName)s() "
+                "line %(lineno)d: "
+                "%(message)s"
+            )
         )
+        logger.setLevel(logging.DEBUG)
+    else:
+        logging.basicConfig(
+            format="%(asctime)s %(levelname)s %(name)s.%(funcName)s(): %(message)s"
+        )
+        logger.setLevel(logging.INFO)
 
-    def configure_sentry(self) -> None:
-        if sentry_dsn := self.SENTRY_DSN:
-            sentry_sdk.init(
-                dsn=sentry_dsn,
-                environment=self.WORKSPACE,
-                integrations=[
-                    AwsLambdaIntegration(),
-                ],
-                traces_sample_rate=1.0,
-            )
-            logger.info(
-                "Sentry DSN found, exceptions will be sent to Sentry with env=%s",
-                self.WORKSPACE,
-            )
-        else:
-            logger.info("No Sentry DSN found, exceptions will not be sent to Sentry")
+    return (
+        f"Logger '{logger.name}' configured with level="
+        f"{logging.getLevelName(logger.getEffectiveLevel())}"
+    )
+
+
+def configure_sentry() -> str:
+    env = os.getenv("WORKSPACE")
+    sentry_dsn = os.getenv("SENTRY_DSN")
+    if sentry_dsn and sentry_dsn.lower() != "none":
+        sentry_sdk.init(
+            sentry_dsn,
+            environment=env,
+        )
+        return f"Sentry DSN found, exceptions will be sent to Sentry with env={env}"
+    return "No Sentry DSN found, exceptions will not be sent to Sentry"
