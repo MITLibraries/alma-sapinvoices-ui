@@ -29,7 +29,6 @@ ALMA_SAP_INVOICES_ECS_CLUSTER=### The full ARN of the ECS cluster to run the Alm
 ALMA_SAP_INVOICES_ECS_TASK_DEFINITION=### The family and revision (formatted as <family>:<revision>) or full ARN of Alma SAP Invoices CLI ECS task. 
 ALMA_SAP_INVOICES_ECS_GROUPS=### Security group(s) for the Alma SAP Invoices ECS task (formatted as a comma-separated string excluding whitespaces, e.g. "sg-abc123,sg-def456").
 ALMA_SAP_INVOICES_ECS_SUBNETS=### Subnet(s) for the Alma SAP Invoices ECS task (formatted as a comma-separated string excluding whitespaces, e.g. "subnet-abc123,subnet-def456").
-ALMA_SAP_INVOICES_ECS_NETWORK_CONFIG=### The network configuration for the Alma SAP Invoices ECS task.
 ALMA_SAP_INVOICES_CLOUDWATCH_LOG_GROUP=### The name of the log group containing logs from Alma SAP Invoices ECS task runs.
 LOGIN_DISABLED=### String variable representing a boolean to disable login (i.e., ignore 'login_required' decorator). Set to 'true' to disable login (recommended for unit testing and Dev); must be set to 'false' for Stage and Prod.
 SECRET_KEY=### A secret key used for securely signing the session cookie and can be used for any other security related needs by extensions or the application. It should be a long random bytes or string.

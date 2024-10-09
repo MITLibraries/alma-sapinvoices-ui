@@ -6,87 +6,71 @@
   <h1>Process invoices</h1>
   <div class="review-run well">
     <h3 class="title"><strong>Review run</strong></h3>
+    <p><strong>Always execute a <u>review run</u> first.</strong></p>
     <p>
-      A review run is always executed before a final run. Executing a review run will 
-      create formatted review reports, which are then sent to Acquisitions staff. 
-      This process is described in more detail below:
+      A review run:
       <ol>
+        <li>Retrieves invoices from Alma with “Ready to be paid” status*</li>
+        <li>Creates two (2) formatted reports -- one for monographs and one for serials</li>
+        <li>Creates two (2) summary lists of invoices -- one for monographs and one for serials</li>
         <li>
-          Invoices from Alma with status "Waiting to be sent" are retrieved,
-          sorted by vendor code and invoice number.
-        </li>
-        <li>
-          For every invoice record, the following occur:
-          <ul>
-            <li>Given the vendor code, the vendor's payment address is retrieved from Alma.</li>
-            <li>Data about funds are retrieved from Alma.</li>
-            <li>The data is inspected for multibyte errors.</li>
-          </ul>
-          If any errors occur during the three steps described above, the errors are flagged for the
-          invoice record. Invoices flagged with any errors are denoted "problem invoices" and are 
-          <strong>not</strong> processed further.
-          
-          Invoice records parsed successfully are denoted "parsed invoices" and further processed. 
-        </li>
-        <li>
-          The "parsed invoices" are grouped into monographs and serials based on the "purchase type"
-          of the record.
-        </li>
-        <li>
-          For each purchase type (monographs and serials), the following occur:
-            <ul>
-              <li>
-                A summary and report is generated. The summary is used as the text in the body of the email
-                while the report is a text file that is attached to the email. <br>
-              </li>
-              <li>
-                An email is created and sent to the alma-sap-feeds-create@mit.edu Moira list. Emails for 
-                review runs are identified by the subject heading: "REVIEW libraries invoice feed - &lt;purchase type&gt;".
-              </li>
-            </ul>
+          Sends two (2) emails with the formatted reports and summary lists 
+          (one email for monographs and one email for serials) to the 
+          alma-sap-feeds-create@mit.edu Moira list, which includes members of 
+          the Libraries’ invoice processing staff and Enterprise Systems staff
         </li>
       </ol>
+      After receiving the formatted reports, invoice processing staff compare the report 
+      to the vendor’s invoices, and adjust the Alma invoices as needed.
+      Review runs can be executed as many times as needed, 
+      until all invoices in Alma are accurate.
     </p>
-    <p><strong>What happens to "problem invoices"?</strong></p>
-    <p>
-      Warnings are created for every invoice that encountered an error during processing.
-      These warning statements will indicate all the errors for a given record and 
-      are included in the summary used as the content of the email.
-    </p>
-    <p><strong>IMPORTANT: All errors <u>must</u> be addressed before executing a final run.</strong></p>
     <p><a class="btn button-primary" href="{{ url_for('process_invoices_run', run_type='review') }}">Execute <strong>review</strong> run</a></p>
   </div>
   <div class="final-run well">
     <h3 class="title"><strong>Final run</strong></h3>
     <p>
-      A final run is only executed after a successful review run without any errors. The process for a final run
-      involves the same steps as the review run (see description for "Review run" above) but with some
-      additional steps. These additional steps are described in more detail below:
+      <strong>
+        IMPORTANT: 
+        <ul>
+          <li>
+            A <u>final run</u> can only be executed once because it 
+            alters the invoices in Alma and transmits the invoices to SAP.
+          </li>
+          <li>
+            All errors from a <u>review run</u> <em>must</em> be addressed before
+            executing a final run. 
+          </li>
+        </ul>
+      </strong>
+      Only execute a <strong>final run</strong> once all Alma invoices have been adjusted
+      and a review run produces a report that matches the vendor invoices.
+    </p>
+    <p>
+      A final run:
       <ol>
+        <li>Retrieves invoices from Alma with “Ready to be paid” status*</li>
+        <li>Creates two (2) formatted reports -- one for monographs and one for serials</li>
+        <li>Creates two (2) summary lists of the invoices -- one for monographs and one for serials</li>
         <li>
-          The total amount across all SAP invoices, which are invoices for which the payment method
-          labeled as "ACCOUNTINGDEPARTMENT", is calculated.
+          Creates two (2) sets of a data file and a control file -- one for monographs and 
+          one for serials
         </li>
+        <li>Transmits the data files and control files to Accounts Payable</li>
+        <li>Marks the invoices "Paid" in Alma</li>
         <li>
-          A <a href="https://wikis.mit.edu/confluence/display/SAPdev/MIT+SAP+Dropbox">data file and control file</a> are generated for the SAP invoices. 
-        </li>
-        <li>
-          The data files and control file are uploaded to the SAP Dropbox folder.
-        </li>
-        <li>
-          The SAP sequence number is updated for the next run.
-        </li>
-        <li>
-          Invoices are marked as paid in Alma.
+          Sends two (2) emails with the formatted reports and summary lists 
+          (one email for monographs and one email for serials) to the
+          alma-sap-feeds-send@mit.edu Moira list, which includes members of 
+          the Libraries’ invoice processing staff, Enterprise Systems staff, 
+          and Accounts Payable staff
         </li>
       </ol>
     </p>
-    <p>
-      <strong>Note:</strong> In contrast to the review run, email with the generated summary and report
-      are sent to the alma-sap-feeds-send@mit.edu Moira list. Emails for final runs are identified
-      by the subject heading: "Libraries invoice feed - &lt;purchase type&gt;".
     </p>
-    <p><strong>IMPORTANT: All errors from a review run <u>must</u> be addressed before executing a final run.</strong></p>
     <p><a class="btn button-primary" href="{{ url_for('process_invoices_confirm_final_run') }}">Execute a <strong>final</strong> run</a></p>
   </div>
+  *In the Alma UI, the invoices will display the status of “Ready to be paid”, but 
+   under the hood, the status of these invoices is “Waiting to be sent”. 
+   Strange but true!
 {% endblock content %}
