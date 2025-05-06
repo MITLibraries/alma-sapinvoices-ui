@@ -22,8 +22,8 @@ repos:
         language: system
         pass_filenames: true
         types: ["python"]
-      - id: safety
-        name: safety
-        entry: pipenv check --ignore 70612
+      - id: pip-audit
+        name: pip-audit
+        entry: pipenv run pip-audit
         language: system
         pass_filenames: false
