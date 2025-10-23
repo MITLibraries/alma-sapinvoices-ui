@@ -1,4 +1,3 @@
-# ruff: noqa: G004
 import base64
 import json
 import logging

@@ -1,4 +1,3 @@
-# ruff: noqa: E501, PT004
 import json
 from datetime import timedelta
 from unittest import mock
