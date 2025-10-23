@@ -1,6 +1,11 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "assigneesFromCodeOwners": true,
   "extends": [
-    "local>MITLibraries/renovate-config"
+    "schedule:nonOfficeHours"
+  ],
+  "dependencyDashboard": true,
+  "enabledManagers": [
+    "pipenv"
   ]
 }
