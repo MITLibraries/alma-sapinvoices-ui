@@ -17,7 +17,7 @@
     "commitMessageTopic": null,
     "commitMessageExtra": null,
     "schedule": [
-      "0 4 * * 1"
+      "* 4 * * 1"
     ],
     "groupName": null,
     "prBodyDefinitions": {
