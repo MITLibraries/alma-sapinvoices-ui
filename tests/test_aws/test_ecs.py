@@ -80,7 +80,7 @@ def test_client_run_raise_error_if_task_definition_does_not_exist(
     )
     with pytest.raises(
         ECSTaskDefinitionDoesNotExistError,
-        match="No task definition found for 'DOES_NOT_EXIST'.",
+        match=r"No task definition found for 'DOES_NOT_EXIST'.",
     ):
         bad_ecs_client.run(run_type="review")
 
@@ -114,7 +114,7 @@ def test_ecs_client_monitor_task_raise_error(
 
     with pytest.raises(
         ECSTaskRuntimeExceededTimeoutError,
-        match="Task runtime exceeded set timeout of 2 seconds.",
+        match=r"Task runtime exceeded set timeout of 2 seconds.",
     ):
         ecs_client.monitor_task(task_arn, timeout=2)
 
@@ -126,7 +126,7 @@ def test_ecs_client_get_task_status_success(ecs_client, mock_ecs_task_state_tran
 
 def test_ecs_client_get_task_status_raise_error(ecs_client):
     with pytest.raises(
-        ECSTaskDoesNotExistError, match="No tasks found for id 'DOES_NOT_EXIST'."
+        ECSTaskDoesNotExistError, match=r"No tasks found for id 'DOES_NOT_EXIST'."
     ):
         assert ecs_client.get_task_status(task_id="DOES_NOT_EXIST")
 

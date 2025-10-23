@@ -45,6 +45,6 @@ def test_cloudwatchlogs_client_get_log_events_raise_error(
 ):
     with pytest.raises(
         ECSTaskLogStreamDoesNotExistError,
-        match="No log streams found for task id 'DOES_NOT_EXIST'.",
+        match=r"No log streams found for task id 'DOES_NOT_EXIST'.",
     ):
         assert cloudwatchlogs_client.get_log_events(task_id="DOES_NOT_EXIST")
