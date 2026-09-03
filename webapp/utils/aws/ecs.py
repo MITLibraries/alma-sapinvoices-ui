@@ -62,23 +62,22 @@ class ECSClient:
             message = f"Cannot run task for unrecognized run_type='{run_type}'"
             raise ValueError(message)
 
-        if self.task_definition_exists():
-            response = self.client.run_task(
-                cluster=self.cluster,
-                launchType="FARGATE",
-                networkConfiguration=self.network_configuration,  # type: ignore[arg-type]
-                overrides={  # type: ignore[arg-type, misc]
-                    "containerOverrides": [
-                        {
-                            "name": self.container,
-                            "command": commands,
-                        }
-                    ]
-                },
-                taskDefinition=self.task_definition,
-            )
-            return response["tasks"][0]["taskArn"]
-        raise ECSTaskDefinitionDoesNotExistError(self.task_definition)
+        response = self.client.run_task(
+            cluster=self.cluster,
+            launchType="FARGATE",
+            networkConfiguration=self.network_configuration,  # type: ignore[arg-type]
+            overrides={  # type: ignore[arg-type, misc]
+                "containerOverrides": [
+                    {
+                        "name": self.container,
+                        "command": commands,
+                    }
+                ]
+            },
+            taskDefinition=self.task_definition,
+            propagateTags="TASK_DEFINITION",
+        )
+        return response["tasks"][0]["taskArn"]
 
     def monitor_task(self, task_id: str, timeout: int = 600) -> None:
         """Polls ECS for task status updates.
