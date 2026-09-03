@@ -1,14 +1,11 @@
-# ruff: noqa: E501
 import os
 
 import pytest
 
 from webapp.exceptions import (
-    ECSTaskDefinitionDoesNotExistError,
     ECSTaskDoesNotExistError,
     ECSTaskRuntimeExceededTimeoutError,
 )
-from webapp.utils.aws import ECSClient
 
 
 def test_ecs_client_init_success(ecs_client):
@@ -29,17 +26,9 @@ def test_ecs_client_init_success(ecs_client):
 def test_ecs_client_task_family_property_success(ecs_client):
     assert (
         ecs_client.task_definition
-        == "arn:aws:ecs:us-east-1:123456789012:task-definition/mock-sapinvoices-ecs-test:1"
+        == "arn:aws:ecs:us-east-1:123456789012:task-definition/mock-sapinvoices-ecs-test"
     )
     assert ecs_client.task_family == "mock-sapinvoices-ecs-test"
-
-
-def test_ecs_client_task_family_revision_property_success(ecs_client):
-    assert (
-        ecs_client.task_definition
-        == "arn:aws:ecs:us-east-1:123456789012:task-definition/mock-sapinvoices-ecs-test:1"
-    )
-    assert ecs_client.task_family_revision == "mock-sapinvoices-ecs-test:1"
 
 
 def test_ecs_client_execute_review_run_success(
@@ -67,22 +56,6 @@ def test_ecs_client_run_raise_error_if_run_type_is_invalid(ecs_client):
         ValueError, match="Cannot run task for unrecognized run_type='invalid'"
     ):
         ecs_client.run(run_type="invalid")
-
-
-def test_client_run_raise_error_if_task_definition_does_not_exist(
-    mock_ecs_task_definition,
-):
-    bad_ecs_client = ECSClient(
-        cluster="test",
-        task_definition="DOES_NOT_EXIST",
-        network_configuration="test",
-        container="test",
-    )
-    with pytest.raises(
-        ECSTaskDefinitionDoesNotExistError,
-        match=r"No task definition found for 'DOES_NOT_EXIST'.",
-    ):
-        bad_ecs_client.run(run_type="review")
 
 
 def test_ecs_client_monitor_task_success(
@@ -144,17 +117,3 @@ def test_ecs_client_task_exists_returns_true(ecs_client, mock_ecs_task_state_tra
 
 def test_ecs_client_task_exists_returns_false(ecs_client):
     assert ecs_client.task_exists(task_id="DOES_NOT_EXIST") is False
-
-
-def test_ecs_client_task_definition_returns_true(ecs_client, mock_ecs_task_definition):
-    assert ecs_client.task_definition_exists() is True
-
-
-def test_ecs_client_task_definition_exists_returns_false(mock_ecs_task_definition):
-    bad_ecs_client = ECSClient(
-        cluster="test",
-        task_definition="DOES_NOT_EXIST",
-        network_configuration="test",
-        container="test",
-    )
-    assert bad_ecs_client.task_definition_exists() is False

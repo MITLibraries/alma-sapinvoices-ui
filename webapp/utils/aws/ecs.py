@@ -1,5 +1,4 @@
 import logging
-import re
 import time
 from typing import TYPE_CHECKING, Literal
 
@@ -11,7 +10,6 @@ if TYPE_CHECKING:
 
 from webapp.config import Config
 from webapp.exceptions import (
-    ECSTaskDefinitionDoesNotExistError,
     ECSTaskDoesNotExistError,
     ECSTaskRuntimeExceededTimeoutError,
 )
@@ -38,10 +36,6 @@ class ECSClient:
 
     @property
     def task_family(self) -> str:
-        return re.sub(":.*", "", self.task_family_revision)
-
-    @property
-    def task_family_revision(self) -> str:
         return self.task_definition.split("/")[-1]
 
     def execute_review_run(self) -> str | None:
@@ -156,22 +150,6 @@ class ECSClient:
             bool: If task run exists, return True, else False.
         """
         return any(task_id in task_arn for task_arn in self.get_tasks())
-
-    def task_definition_exists(self) -> bool:
-        """Determine if the task definition exists.
-
-        This method will determine if the task definition exists by
-        looping through the list of task definition ARNs and seeing if
-        ECSClient.task_family_revision appears in any of the task definition
-        ARNS.
-        """
-        response = self.client.list_task_definitions(
-            familyPrefix=self.task_family, sort="DESC"
-        )
-        existing_task_definitions = [
-            task.split("/")[-1] for task in response["taskDefinitionArns"]
-        ]
-        return self.task_family_revision in existing_task_definitions
 
     def get_tasks(self) -> list[str]:
         """Get list of all ECS tasks."""

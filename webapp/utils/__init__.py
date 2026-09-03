@@ -106,7 +106,7 @@ def parse_oidc_data(
     https://docs.aws.amazon.com/elasticloadbalancing/latest/application/listener-authenticate-users.html
     """
     # parse JWT headers
-    jwt_headers_str = encoded_jwt.split(".")[0]
+    jwt_headers_str = encoded_jwt.split(".", maxsplit=1)[0]
     decoded_jwt_headers_json = base64.b64decode(jwt_headers_str).decode()
     jwt_headers = json.loads(decoded_jwt_headers_json)
 
@@ -128,5 +128,5 @@ def parse_oidc_data(
         pub_key,
         algorithms=["ES256"],
         verify=verify,
-        options=options,
+        options=options,  # type: ignore[arg-type]
     )

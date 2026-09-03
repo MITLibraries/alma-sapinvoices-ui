@@ -30,7 +30,7 @@ def _test_env(monkeypatch):
     monkeypatch.setenv("ALMA_SAP_INVOICES_ECS_SUBNETS", "subnet-abc123,subnet-def456")
     monkeypatch.setenv(
         "ALMA_SAP_INVOICES_ECS_TASK_DEFINITION",
-        f"arn:aws:ecs:us-east-1:{ACCOUNT_ID}:task-definition/mock-sapinvoices-ecs-test:1",
+        f"arn:aws:ecs:us-east-1:{ACCOUNT_ID}:task-definition/mock-sapinvoices-ecs-test",
     )
     monkeypatch.setenv(
         "ALMA_SAP_INVOICES_CLOUDWATCH_LOG_GROUP", "mock-sapinvoices-ecs-test"
@@ -155,11 +155,6 @@ def ecs_client_execute_run_details_success(
     mock_boto3_client,
 ):
     mock_boto3_client.run_task.return_value = boto3_ecs_client_run_task_response_success
-    with patch(
-        "webapp.utils.aws.ECSClient.task_definition_exists"
-    ) as mock_webapp_ecs_client_task_exists:
-        mock_webapp_ecs_client_task_exists.return_value = True
-        yield
 
 
 @pytest.fixture
